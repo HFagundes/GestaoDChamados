@@ -8,12 +8,14 @@ namespace GestaoDChamados.Usuario
 {
     public class UsuarioForm : Form
     {
+        private string user;
         private Panel sidebar, header, mainContent;
         private Label lblTitulo, lblAbertos, lblAndamento, lblVencidos, lblResolvidos;
         private DataGridView dgvChamadosAbertos, dgvVencidos;
 
-        public UsuarioForm()
+        public UsuarioForm(string user)
         {
+            this.user = user;
             InitializeComponent();
         }
 
@@ -83,16 +85,16 @@ namespace GestaoDChamados.Usuario
                 panel.Controls.SetChildIndex(btn, panel.Controls.Count - 2);
 
                 // Botões com ação
-                if (nome == "Criar Chamado")
+                if (nome == "Meus Chamados")
                 {
                     btn.Click += (s, e) =>
                     {
                         mainContent.Controls.Clear();
-                        CriarChamadoForm formChamado = new CriarChamadoForm();
-                        formChamado.TopLevel = false;
-                        formChamado.Dock = DockStyle.Fill;
-                        mainContent.Controls.Add(formChamado);
-                        formChamado.Show();
+                        MostrarChamadosForm formMostrarChamados = new MostrarChamadosForm(user);
+                        formMostrarChamados.TopLevel = false;
+                        formMostrarChamados.Dock = DockStyle.Fill;
+                        mainContent.Controls.Add(formMostrarChamados);
+                        formMostrarChamados.Show();
                     };
                 }
 

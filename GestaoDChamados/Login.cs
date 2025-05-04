@@ -20,7 +20,6 @@ namespace ChamadosApp
 
         private string connectionString = "Host=localhost;Port=5432;Database=GestaoChamados;Username=postgres;Password=123;";
 
-
         public LoginForm()
         {
             InitializeComponent();
@@ -181,7 +180,7 @@ namespace ChamadosApp
             else if (tipoUsuario == "usuario")
             {
                 MessageBox.Show("Login funcionário feito com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                UsuarioForm usuarioForm = new UsuarioForm();
+                UsuarioForm usuarioForm = new UsuarioForm(user);
                 usuarioForm.Show();
                 this.Hide();
             }
@@ -218,6 +217,5 @@ namespace ChamadosApp
                 return null;
             }
         }
-
     }
 }
