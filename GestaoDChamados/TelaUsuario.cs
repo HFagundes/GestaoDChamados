@@ -198,7 +198,6 @@ namespace AtendeAI
             tabela1.Rows.Add("#152", "Problema de rede", "02/05/2025", "Alta");
             tabela1.Rows.Add("#151", "Erro ao abrir aplicação", "02/05/2025", "Média");
 
-            // Atribuindo a tabela ao DataGridView
             dgvChamadosAbertos.DataSource = tabela1;
 
             // Dados para a tabela de chamados vencidos
