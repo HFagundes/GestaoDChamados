@@ -1,7 +1,8 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Data.SqlClient;
+using AtendeAI;
+using Npgsql;
 
 namespace ChamadosApp
 {
@@ -17,7 +18,7 @@ namespace ChamadosApp
         private Panel panelRight;
         private PictureBox picIllustration;
 
-        private string connectionString = "Server=DESKTOP-GMHOPRR\\SQLEXPRESS;Database=BancoGestao;User Id=sa;Password=suaSenhaAqui;";
+        private string connectionString = "Host=localhost;Port=5432;Database=GestaoChamados;Username=postgres;Password=123;";
 
 
         public LoginForm()
@@ -131,7 +132,7 @@ namespace ChamadosApp
 
             // picIllustration
             picIllustration.Dock = DockStyle.Fill;
-            picIllustration.Image = (Image)resources.GetObject("picIllustration.Image");
+            picIllustration.Image = (Image)resources.GetObject(@"C:\Users\vaspt\OneDrive\Área de Trabalho\PIM\GestaoDChamados\GestaoDChamados\resouces\ilustration.png");
             picIllustration.Location = new Point(0, 0);
             picIllustration.Name = "picIllustration";
             picIllustration.Size = new Size(300, 400);
@@ -177,6 +178,13 @@ namespace ChamadosApp
                 funcionarioForm.Show();
                 this.Hide();
             }
+            else if (tipoUsuario == "usuario")
+            {
+                MessageBox.Show("Login funcionário feito com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                UsuarioForm usuarioForm = new UsuarioForm();
+                usuarioForm.Show();
+                this.Hide();
+            }
             else
             {
                 MessageBox.Show("Usuário ou senha inválidos.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -187,19 +195,29 @@ namespace ChamadosApp
 
         private string AutenticarUsuario(string username, string password)
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            try
             {
-                conn.Open();
-                string query = "SELECT Tipo FROM Usuarios WHERE Usuario = @Usuario AND Senha = @Senha";
-                using (SqlCommand cmd = new SqlCommand(query, conn))
+                using (var conn = new NpgsqlConnection(connectionString))
                 {
-                    cmd.Parameters.AddWithValue("@Usuario", username);
-                    cmd.Parameters.AddWithValue("@Senha", password);
+                    conn.Open();
 
-                    object result = cmd.ExecuteScalar();
-                    return result != null ? result.ToString() : null;
+                    string query = "SELECT tipo FROM usuarios WHERE usuario = @usuario AND senha = @senha";
+                    using (var cmd = new NpgsqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("usuario", username);
+                        cmd.Parameters.AddWithValue("senha", password);
+
+                        var result = cmd.ExecuteScalar();
+                        return result?.ToString();
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erro ao conectar ao banco: " + ex.Message, "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
+            }
         }
+
     }
 }
