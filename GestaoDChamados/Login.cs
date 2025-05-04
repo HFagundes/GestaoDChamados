@@ -17,7 +17,7 @@ namespace ChamadosApp
         private Panel panelRight;
         private PictureBox picIllustration;
 
-        private string connectionString = "Server=DESKTOP-GMHOPRR\\SQLEXPRESS;Database=BancoGestao;User Id=sa;Password=suaSenhaAqui;";
+        private readonly string connectionString = "Host=localhost;Port=5432;Database=GestaoChamados;Username=postgres;Password=123;";
 
 
         public LoginForm()
@@ -161,20 +161,24 @@ namespace ChamadosApp
             string user = txtUsername.Text.Trim();
             string pass = txtPassword.Text;
 
+            if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
+            {
+                MessageBox.Show("Por favor, preencha todos os campos.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             string tipoUsuario = AutenticarUsuario(user, pass);
 
             if (tipoUsuario == "admin")
             {
                 MessageBox.Show("Login efetuado com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                AdminForm adminForm = new AdminForm();
-                adminForm.Show();
+                new AdminForm().Show();
                 this.Hide();
             }
             else if (tipoUsuario == "funcionario")
             {
-                MessageBox.Show("Login funcionário feito com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                FuncionarioForm funcionarioForm = new FuncionarioForm();
-                funcionarioForm.Show();
+                MessageBox.Show("Login de funcionário feito com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                new FuncionarioForm().Show();
                 this.Hide();
             }
             else
@@ -187,18 +191,23 @@ namespace ChamadosApp
 
         private string AutenticarUsuario(string username, string password)
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            try
             {
+                using var conn = new NpgsqlConnection(connectionString);
                 conn.Open();
-                string query = "SELECT Tipo FROM Usuarios WHERE Usuario = @Usuario AND Senha = @Senha";
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue("@Usuario", username);
-                    cmd.Parameters.AddWithValue("@Senha", password);
 
-                    object result = cmd.ExecuteScalar();
-                    return result != null ? result.ToString() : null;
-                }
+                string query = "SELECT tipo FROM usuarios WHERE usuario = @usuario AND senha = @senha";
+                using var cmd = new NpgsqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("usuario", username);
+                cmd.Parameters.AddWithValue("senha", password); // Para produção, use hash (ex: SHA256)
+
+                object result = cmd.ExecuteScalar();
+                return result?.ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erro ao conectar ao banco: " + ex.Message, "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
             }
         }
     }
