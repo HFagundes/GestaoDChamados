@@ -3,6 +3,8 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Data;
 using AtendeAI;
+using GestaoDChamados.Usuario.ChatBots;
+using GestaoDChamados.Usuario.ChatBots.chatgpt;
 
 namespace GestaoDChamados.Usuario
 {
@@ -93,6 +95,19 @@ namespace GestaoDChamados.Usuario
                         formChamado.Dock = DockStyle.Fill;
                         mainContent.Controls.Add(formChamado);
                         formChamado.Show();
+                    };
+                }
+
+                if (nome == "Ajuda.AI")
+                {
+                    btn.Click += (s, e) =>
+                    {
+                        mainContent.Controls.Clear();
+                        var chatForm = new ChatForm();
+                        chatForm.TopLevel = false;
+                        chatForm.Dock = DockStyle.Fill;
+                        mainContent.Controls.Add(chatForm);
+                        chatForm.Show();
                     };
                 }
 
