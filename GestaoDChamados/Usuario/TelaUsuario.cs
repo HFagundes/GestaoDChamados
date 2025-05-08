@@ -139,7 +139,7 @@ namespace GestaoDChamados.Usuario
                 Font = new Font("Segoe UI", 16, FontStyle.Bold),
                 ForeColor = Color.FromArgb(40, 40, 60),
                 AutoSize = true,
-                Location = new Point(220, 15)
+                Location = new Point(10, 15)
             };
 
             panel.Controls.Add(lblTitulo);

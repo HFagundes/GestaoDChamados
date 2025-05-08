@@ -36,15 +36,15 @@ namespace AtendeAI
             };
 
             // Nome
-            var lblNome = new Label { Text = "Nome:", Location = new Point(20, 70) };
+            var lblNome = new Label { Text = "Nome:", Location = new Point(20, 60) };
             txtNome = new TextBox { Location = new Point(20, 90), Width = 520 };
 
             // Email
-            var lblEmail = new Label { Text = "Email:", Location = new Point(20, 130) };
+            var lblEmail = new Label { Text = "Email:", Location = new Point(20, 120) };
             txtEmail = new TextBox { Location = new Point(20, 150), Width = 520 };
 
             // Urgência
-            var lblUrgencia = new Label { Text = "Urgência:", Location = new Point(20, 190) };
+            var lblUrgencia = new Label { Text = "Urgência:", Location = new Point(20, 180) };
             cbUrgencia = new ComboBox
             {
                 Location = new Point(20, 210),
@@ -55,11 +55,11 @@ namespace AtendeAI
             cbUrgencia.SelectedIndex = 1;
 
             // Assunto
-            var lblAssunto = new Label { Text = "Assunto (máx 150 caracteres):", Location = new Point(20, 250) };
+            var lblAssunto = new Label { Text = "Assunto (máx 150 caracteres):", AutoSize=true, Location = new Point(20, 240) };
             txtAssunto = new TextBox { Location = new Point(20, 270), Width = 520, MaxLength = 150 };
 
             // Descrição
-            var lblDescricao = new Label { Text = "Descrição:", Location = new Point(20, 310) };
+            var lblDescricao = new Label { Text = "Descrição:", Location = new Point(20, 300) };
             txtDescricao = new TextBox
             {
                 Location = new Point(20, 330),
