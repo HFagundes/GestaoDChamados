@@ -161,149 +161,67 @@ namespace GestaoDChamados.Usuario
         }
 
         private void CriarMainContent()
-        {
-            mainContent.Controls.Clear();
+{
+    mainContent.Controls.Clear();
 
-            var cardsPanel = new Panel
-            {
-                Size = new Size(900, 100),
-                Location = new Point((ClientSize.Width - 900) / 2, 0),
-                Anchor = AnchorStyles.Top
-            };
+    // Painel centralizado
+    var painelCentral = new Panel
+    {
+        Size = new Size(600, 300),
+        Location = new Point((ClientSize.Width - 600) / 2, 50),
+        Anchor = AnchorStyles.Top
+    };
 
-            lblAbertos = CriarCard("Chamados Abertos", "5", 0);
-            lblAndamento = CriarCard("Em Andamento", "3", 200);
-            lblVencidos = CriarCard("Vencidos", "1", 400);
-            lblResolvidos = CriarCard("Resolvidos Hoje", "7", 600);
+    // Logo da empresa
+    var logo = new PictureBox
+    {
+        Image = Image.FromFile("resources/metacorp.png"), // ajuste o caminho se necessário
+        SizeMode = PictureBoxSizeMode.Zoom,
+        Size = new Size(100, 100),
+        Location = new Point(0, 0)
+    };
+    painelCentral.Controls.Add(logo);
 
-            cardsPanel.Controls.Add((lblAbertos.Tag as Panel));
-            cardsPanel.Controls.Add((lblAndamento.Tag as Panel));
-            cardsPanel.Controls.Add((lblVencidos.Tag as Panel));
-            cardsPanel.Controls.Add((lblResolvidos.Tag as Panel));
+    // Nome da empresa ao lado da logo
+    var lblEmpresa = new Label
+    {
+        Text = "META CORP",
+        Font = new Font("Segoe UI", 24, FontStyle.Bold),
+        ForeColor = Color.FromArgb(40, 70, 120),
+        AutoSize = true,
+        Location = new Point(logo.Right + 20, 30)
+    };
+    painelCentral.Controls.Add(lblEmpresa);
 
-            var gbAbertos = new GroupBox
-            {
-                Text = "Chamados Abertos",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                ForeColor = Color.FromArgb(40, 70, 120),
-                Size = new Size(550, 220),
-                Location = new Point((ClientSize.Width - 550) / 2, 150)
-            };
-            dgvChamadosAbertos = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                ReadOnly = true,
-                AllowUserToAddRows = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White
-            };
-            gbAbertos.Controls.Add(dgvChamadosAbertos);
+    // Simulação de nome e cargo do usuário
+    string nomeUsuario = "João da Silva";
+    string cargoUsuario = "Analista de Suporte";
 
-            var gbFechados = new GroupBox
-            {
-                Text = "Chamados Fechados",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                ForeColor = Color.FromArgb(40, 70, 120),
-                Size = new Size(550, 220),
-                Location = new Point((ClientSize.Width - 550) / 2, 390)
-            };
-            dgvVencidos = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                ReadOnly = true,
-                AllowUserToAddRows = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White
-            };
-            gbFechados.Controls.Add(dgvVencidos);
+    var lblBemVindo = new Label
+    {
+        Text = $"Bem-vindo {nomeUsuario} ({cargoUsuario})",
+        Font = new Font("Segoe UI", 12, FontStyle.Regular),
+        ForeColor = Color.Black,
+        AutoSize = true,
+        Location = new Point(0, logo.Bottom + 20)
+    };
+    painelCentral.Controls.Add(lblBemVindo);
 
-            mainContent.Controls.Add(cardsPanel);
-            mainContent.Controls.Add(gbAbertos);
-            mainContent.Controls.Add(gbFechados);
+    // Avisos
+    string aviso = ""; // aqui você pode buscar os avisos dinamicamente
+    var lblAviso = new Label
+    {
+        Text = "Avisos: " + (string.IsNullOrWhiteSpace(aviso) ? "Sem avisos" : aviso),
+        Font = new Font("Segoe UI", 10, FontStyle.Italic),
+        ForeColor = Color.DarkGray,
+        AutoSize = true,
+        Location = new Point(0, lblBemVindo.Bottom + 15)
+    };
+    painelCentral.Controls.Add(lblAviso);
 
-            CarregarDados();
-        }
+    mainContent.Controls.Add(painelCentral);
+}
 
-        private Label CriarCard(string titulo, string valor, int posX)
-        {
-            Color bgColor;
-            Color textColor;
-            switch (titulo)
-            {
-                case "Chamados Abertos":
-                    bgColor = ColorTranslator.FromHtml("#E3F2FD");
-                    textColor = ColorTranslator.FromHtml("#1976D2");
-                    break;
-                case "Em Andamento":
-                    bgColor = ColorTranslator.FromHtml("#FFF8E1");
-                    textColor = ColorTranslator.FromHtml("#FFA000");
-                    break;
-                case "Vencidos":
-                    bgColor = ColorTranslator.FromHtml("#FFEBEE");
-                    textColor = ColorTranslator.FromHtml("#D32F2F");
-                    break;
-                case "Resolvidos Hoje":
-                    bgColor = ColorTranslator.FromHtml("#E8F5E9");
-                    textColor = ColorTranslator.FromHtml("#388E3C");
-                    break;
-                default:
-                    bgColor = Color.White;
-                    textColor = Color.Black;
-                    break;
-            }
-
-            var card = new Panel
-            {
-                Size = new Size(200, 80),
-                Location = new Point(posX, 10),
-                BackColor = bgColor,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-
-            var lblTitle = new Label
-            {
-                Text = titulo,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                ForeColor = Color.FromArgb(50, 50, 70),
-                Location = new Point(10, 10),
-                AutoSize = true
-            };
-            card.Controls.Add(lblTitle);
-
-            var lblValue = new Label
-            {
-                Text = valor,
-                Font = new Font("Segoe UI", 22, FontStyle.Bold),
-                ForeColor = textColor,
-                Location = new Point(10, 35),
-                AutoSize = true,
-                Tag = card
-            };
-            card.Controls.Add(lblValue);
-
-            return lblValue;
-        }
-
-        private void CarregarDados()
-        {
-            var tabela1 = new DataTable();
-            tabela1.Columns.Add("ID");
-            tabela1.Columns.Add("Assunto");
-            tabela1.Columns.Add("Data Abertura");
-            tabela1.Columns.Add("Prioridade");
-            tabela1.Rows.Add("#152", "Problema de rede", "02/05/2025", "Alta");
-            tabela1.Rows.Add("#151", "Erro ao abrir aplicação", "02/05/2025", "Média");
-            dgvChamadosAbertos.DataSource = tabela1;
-
-            var tabela2 = new DataTable();
-            tabela2.Columns.Add("ID");
-            tabela2.Columns.Add("Assunto");
-            tabela2.Columns.Add("Data Abertura");
-            tabela2.Columns.Add("Prioridade");
-            tabela2.Rows.Add("#142", "Erro de login", "30/04/2025", "Baixa");
-            tabela2.Rows.Add("#138", "Solicitação concluída", "29/04/2025", "Média");
-            dgvVencidos.DataSource = tabela2;
-        }
 
         /// <summary>
         /// Navega programaticamente para a aba "Criar Chamado" dentro do painel principal.
