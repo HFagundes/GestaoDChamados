@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using GestaoDChamados.Funcionario;  // forms ChamadosEmAberto, ChamadosEmAndamento, ChamadosEncerrados
 
 namespace ChamadosApp
 {
@@ -15,10 +16,10 @@ namespace ChamadosApp
         private DataGridView dgvChamadosAbertos;
         private DataGridView dgvChamadosFechados;
 
-        // Ajustes de posicionamento
+        // offsets de posicionamento
         private const int MetricsTopOffset = 80;
         private const int GridsVerticalSpacing = 40;
-        private const int HorizontalExtraOffset = 50; // deslocamento extra à direita
+        private const int HorizontalExtraOffset = 50;
 
         public FuncionarioForm()
         {
@@ -27,14 +28,14 @@ namespace ChamadosApp
 
         private void InitializeComponent()
         {
-            // Form
+            // form
             this.Text = "PAINEL DO FUNCIONARIO";
             this.WindowState = FormWindowState.Maximized;
             this.FormBorderStyle = FormBorderStyle.Sizable;
             this.MaximizeBox = true;
             this.BackColor = Color.DarkGray;
 
-            // Header
+            // header
             header = new Panel
             {
                 Dock = DockStyle.Top,
@@ -53,11 +54,11 @@ namespace ChamadosApp
             };
             header.Controls.Add(lblTitulo);
 
-            // Sidebar
+            // sidebar
             sidebar = CriarSidebar();
             this.Controls.Add(sidebar);
 
-            // MainContent
+            // mainContent
             mainContent = new Panel
             {
                 Dock = DockStyle.Fill,
@@ -66,10 +67,10 @@ namespace ChamadosApp
             };
             this.Controls.Add(mainContent);
 
-            // Monta o dashboard
+            // dashboard inicial
             AdicionarDashboard();
 
-            // Reposiciona no load e no resize
+            // centraliza ao carregar e ao redimensionar
             this.Load += (s, e) => AjustarPosicoes();
             this.Resize += (s, e) => AjustarPosicoes();
         }
@@ -80,15 +81,22 @@ namespace ChamadosApp
             {
                 Width = 240,
                 BackColor = Color.Black,
-                Dock = DockStyle.Left,
+                Dock = DockStyle.Left
             };
 
-            string[] botoes = { "MENU", "CHAMADOS EM ABERTO", "CHAMADOS EM ANDAMENTO", "CHAMADOS ENCERRADOS" };
+            string[] botoes = {
+                "MENU",
+                "CHAMADOS EM ABERTO",
+                "CHAMADOS EM ANDAMENTO",
+                "CHAMADOS ENCERRADOS"
+            };
+
             for (int i = botoes.Length - 1; i >= 0; i--)
             {
+                string nome = botoes[i];
                 var btn = new Button
                 {
-                    Text = botoes[i],
+                    Text = nome,
                     Height = 45,
                     Dock = DockStyle.Top,
                     FlatStyle = FlatStyle.Flat,
@@ -100,9 +108,64 @@ namespace ChamadosApp
                 btn.FlatAppearance.BorderSize = 0;
                 btn.MouseEnter += (s, e) => { btn.BackColor = Color.White; btn.ForeColor = Color.Black; };
                 btn.MouseLeave += (s, e) => { btn.BackColor = Color.Black; btn.ForeColor = Color.White; };
+
+                // associa ação de clique conforme o nome
+                if (nome == "MENU")
+                {
+                    btn.Click += (s, e) =>
+                    {
+                        mainContent.Controls.Clear();
+                        AdicionarDashboard();
+                        AjustarPosicoes();
+                    };
+                }
+                else if (nome == "CHAMADOS EM ABERTO")
+                {
+                    btn.Click += (s, e) =>
+                    {
+                        mainContent.Controls.Clear();
+                        var f = new ChamadosEmAberto(this)
+                        {
+                            TopLevel = false,
+                            Dock = DockStyle.Fill
+                        };
+                        mainContent.Controls.Add(f);
+                        f.Show();
+                    };
+                }
+                else if (nome == "CHAMADOS EM ANDAMENTO")
+                {
+                    btn.Click += (s, e) =>
+                    {
+                        mainContent.Controls.Clear();
+                        var f = new ChamadosEmAndamento(this)
+                        {
+                            TopLevel = false,
+                            Dock = DockStyle.Fill
+                        };
+                        mainContent.Controls.Add(f);
+                        f.Show();
+                    };
+                }
+                else if (nome == "CHAMADOS ENCERRADOS")
+                {
+                    btn.Click += (s, e) =>
+                    {
+                        mainContent.Controls.Clear();
+                        var f = new ChamadosEncerrados(this)
+                        {
+                            TopLevel = false,
+                            Dock = DockStyle.Fill
+                        };
+                        mainContent.Controls.Add(f);
+                        f.Show();
+                    };
+                }
+
                 panel.Controls.Add(btn);
             }
 
+            // espaço e logo
             panel.Controls.Add(new Panel { Height = 50, Dock = DockStyle.Top });
             var logo = new PictureBox
             {
@@ -119,7 +182,7 @@ namespace ChamadosApp
 
         private void AdicionarDashboard()
         {
-            // --- Painel de Métricas ---
+            // painel de métricas
             metricsPanel = new FlowLayoutPanel
             {
                 AutoSize = true,
@@ -131,12 +194,12 @@ namespace ChamadosApp
             };
             mainContent.Controls.Add(metricsPanel);
 
-            metricsPanel.Controls.Add(CriarMetricCard("Chamados Abertos",  "5", Color.FromArgb(0x21,0x96,0xF3)));
-            metricsPanel.Controls.Add(CriarMetricCard("Em Andamento",      "3", Color.FromArgb(0xFF,0x98,0x00)));
-            metricsPanel.Controls.Add(CriarMetricCard("Vencidos",          "1", Color.FromArgb(0xF4,0x43,0x36)));
-            metricsPanel.Controls.Add(CriarMetricCard("Resolvidos Hoje",   "7", Color.FromArgb(0x4C,0xAF,0x50)));
+            metricsPanel.Controls.Add(CriarMetricCard("Chamados Abertos", "5", Color.FromArgb(0x21, 0x96, 0xF3)));
+            metricsPanel.Controls.Add(CriarMetricCard("Em Andamento", "3", Color.FromArgb(0xFF, 0x98, 0x00)));
+            metricsPanel.Controls.Add(CriarMetricCard("Vencidos", "1", Color.FromArgb(0xF4, 0x43, 0x36)));
+            metricsPanel.Controls.Add(CriarMetricCard("Resolvidos Hoje", "7", Color.FromArgb(0x4C, 0xAF, 0x50)));
 
-            // --- Painel de Grids ---
+            // painel de grids
             gridsPanel = new FlowLayoutPanel
             {
                 AutoSize = true,
@@ -148,8 +211,8 @@ namespace ChamadosApp
             };
             mainContent.Controls.Add(gridsPanel);
 
-            // Chamados Abertos
-            var grpAbertos = new GroupBox
+            // grupos de chamados
+            var grpA = new GroupBox
             {
                 Text = "Chamados Abertos",
                 Font = new Font("Segoe UI", 10),
@@ -162,12 +225,11 @@ namespace ChamadosApp
                 ReadOnly = true,
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
             };
-            grpAbertos.Controls.Add(dgvChamadosAbertos);
+            grpA.Controls.Add(dgvChamadosAbertos);
             InicializarGridChamadosAbertos();
-            gridsPanel.Controls.Add(grpAbertos);
+            gridsPanel.Controls.Add(grpA);
 
-            // Chamados Fechados
-            var grpFechados = new GroupBox
+            var grpF = new GroupBox
             {
                 Text = "Chamados Fechados",
                 Font = new Font("Segoe UI", 10),
@@ -180,9 +242,9 @@ namespace ChamadosApp
                 ReadOnly = true,
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
             };
-            grpFechados.Controls.Add(dgvChamadosFechados);
+            grpF.Controls.Add(dgvChamadosFechados);
             InicializarGridChamadosFechados();
-            gridsPanel.Controls.Add(grpFechados);
+            gridsPanel.Controls.Add(grpF);
         }
 
         private Panel CriarMetricCard(string titulo, string valor, Color bgColor)
@@ -195,7 +257,7 @@ namespace ChamadosApp
                 Margin = new Padding(10)
             };
 
-            var lblTitulo = new Label
+            var lblT = new Label
             {
                 Text = titulo,
                 Font = new Font("Segoe UI", 9, FontStyle.Regular),
@@ -204,9 +266,9 @@ namespace ChamadosApp
                 Height = 25,
                 TextAlign = ContentAlignment.MiddleCenter
             };
-            card.Controls.Add(lblTitulo);
+            card.Controls.Add(lblT);
 
-            var lblValor = new Label
+            var lblV = new Label
             {
                 Text = valor,
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
@@ -214,23 +276,23 @@ namespace ChamadosApp
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleCenter
             };
-            card.Controls.Add(lblValor);
+            card.Controls.Add(lblV);
 
             return card;
         }
 
         private void AjustarPosicoes()
         {
-            // Calcula posição dos cards
-            int leftMetrics = (mainContent.ClientSize.Width - metricsPanel.Width) / 2 + HorizontalExtraOffset;
+            // cards
+            int leftM = (mainContent.ClientSize.Width - metricsPanel.Width) / 2 + HorizontalExtraOffset;
             metricsPanel.Top = MetricsTopOffset;
-            metricsPanel.Left = Math.Max(0, leftMetrics);
+            metricsPanel.Left = Math.Max(0, leftM);
 
-            // Calcula posição dos grids
-            int topGrids = metricsPanel.Bottom + GridsVerticalSpacing;
-            int leftGrids = (mainContent.ClientSize.Width - gridsPanel.Width) / 2 + HorizontalExtraOffset;
-            gridsPanel.Top = topGrids;
-            gridsPanel.Left = Math.Max(0, leftGrids);
+            // grids
+            int topG = metricsPanel.Bottom + GridsVerticalSpacing;
+            int leftG = (mainContent.ClientSize.Width - gridsPanel.Width) / 2 + HorizontalExtraOffset;
+            gridsPanel.Top = topG;
+            gridsPanel.Left = Math.Max(0, leftG);
         }
 
         private void InicializarGridChamadosAbertos()

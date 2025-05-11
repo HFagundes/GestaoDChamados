@@ -11,14 +11,14 @@ using ChamadosApp;
 
 namespace GestaoDChamados.Funcionario
 {
-    public partial class ChamadosEmAberto : Form
+    public partial class ChamadosEmAndamento : Form
     {
-        public ChamadosEmAberto()
+        public ChamadosEmAndamento()
         {
             InitializeComponent();
         }
 
-        public ChamadosEmAberto(FuncionarioForm funcionarioForm)
+        public ChamadosEmAndamento(FuncionarioForm funcionarioForm)
         {
         }
     }
