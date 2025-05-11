@@ -53,20 +53,13 @@ namespace GestaoDChamados.Usuario
                 Dock = DockStyle.Left,
             };
 
-            var logo = new Label
-            {
-                Text = "ATENDE.AI",
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI", 16, FontStyle.Bold),
-                Height = 80,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Dock = DockStyle.Top
-            };
-            panel.Controls.Add(logo);
+            // Lista de botões (em ordem normal)
+            string[] botoes = {"MENU", "AJUDA.AI", "CRIAR CHAMADO", "MEUS CHAMADOS" };
 
-            string[] botoes = { "MEUS CHAMADOS", "AJUDA.AI", "CRIAR CHAMADO", "MENU" };
-            foreach (string nome in botoes)
+            // Adiciona os botões de baixo para cima
+            for (int i = botoes.Length - 1; i >= 0; i--)
             {
+                string nome = botoes[i];
                 var btn = new Button
                 {
                     Text = nome,
@@ -91,9 +84,6 @@ namespace GestaoDChamados.Usuario
                     btn.BackColor = Color.Black;
                     btn.ForeColor = Color.White;
                 };
-
-                panel.Controls.Add(btn);
-                panel.Controls.SetChildIndex(btn, panel.Controls.Count - 2);
 
                 if (nome == "CRIAR CHAMADO")
                 {
@@ -121,18 +111,32 @@ namespace GestaoDChamados.Usuario
                         CriarMainContent();
                     };
                 }
+
+                panel.Controls.Add(btn); // Adiciona do último ao primeiro (vai aparecendo de baixo pra cima)
             }
 
-            var linhaBranca = new Panel
+            // Espaço entre logo e botões
+            var spacer = new Panel
             {
-                Width = 2,
-                Dock = DockStyle.Right,
-                BackColor = Color.White
+                Height = 50,
+                Dock = DockStyle.Top
             };
-            panel.Controls.Add(linhaBranca);
+            panel.Controls.Add(spacer);
+
+            // Logo no topo
+            var logo = new PictureBox
+            {
+                Image = Image.FromFile("resources/atendeai.png"),
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Height = 90,
+                Dock = DockStyle.Top,
+                BackColor = Color.Transparent
+            };
+            panel.Controls.Add(logo);
 
             return panel;
         }
+
 
         private Panel CriarHeader()
         {

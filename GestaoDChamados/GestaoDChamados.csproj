@@ -20,4 +20,10 @@
 		</None>
 	</ItemGroup>
 
+	<ItemGroup>
+		<None Update="resources\atendeai.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
 </Project>

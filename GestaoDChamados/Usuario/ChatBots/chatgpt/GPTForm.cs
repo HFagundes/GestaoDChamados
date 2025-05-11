@@ -1,5 +1,4 @@
-﻿// GPTForm.cs (antes ChatForm.cs)
-using System;
+﻿using System;
 using System.Drawing;
 using System.Net.Http;
 using System.Text;
@@ -7,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using GestaoDChamados.Usuario; // para usar UsuarioForm
+using GestaoDChamados.Usuario; 
 
 namespace GestaoDChamados.Usuario.ChatBots.chatgpt
 {
