@@ -1,4 +1,5 @@
-﻿using System;
+﻿// GPTForm.cs (antes ChatForm.cs)
+using System;
 using System.Drawing;
 using System.Net.Http;
 using System.Text;
@@ -6,31 +7,34 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using GestaoDChamados.Usuario; // para usar UsuarioForm
 
 namespace GestaoDChamados.Usuario.ChatBots.chatgpt
 {
     public class ChatForm : Form
     {
+        private readonly UsuarioForm _usuarioForm;
         private FlowLayoutPanel mensagensPanel;
         private TextBox inputBox;
         private static readonly HttpClient client = new HttpClient();
 
-        public ChatForm()
+        public ChatForm(UsuarioForm usuarioForm)
         {
+            _usuarioForm = usuarioForm;
+
             FormBorderStyle = FormBorderStyle.None;
             Width = 500;
             Height = 700;
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = Color.White;
 
-            // Cabeçalho fixo
+            // Cabeçalho
             var header = new Panel
             {
                 Height = 60,
                 Dock = DockStyle.Top,
                 BackColor = Color.FromArgb(37, 211, 102)
             };
-
             var title = new Label
             {
                 Text = "ATENDE.AI",
@@ -39,7 +43,6 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 AutoSize = true,
                 Location = new Point((Width - 100) / 2, 18)
             };
-
             var avatar = new PictureBox
             {
                 Width = 40,
@@ -48,9 +51,8 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
                 SizeMode = PictureBoxSizeMode.Zoom,
-                Image = new Bitmap(40, 40) // Substitua por um avatar real
+                Image = new Bitmap(40, 40)
             };
-
             header.Controls.Add(title);
             header.Controls.Add(avatar);
             Controls.Add(header);
@@ -69,7 +71,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
             Controls.Add(mensagensPanel);
             mensagensPanel.BringToFront();
 
-            // Painel inferior com input
+            // Input
             var bottom = new Panel
             {
                 Height = 53,
@@ -77,7 +79,6 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 BackColor = Color.White,
                 Padding = new Padding(12)
             };
-
             inputBox = new TextBox
             {
                 Font = new Font("Segoe UI", 12),
@@ -86,7 +87,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
             bottom.Controls.Add(inputBox);
             Controls.Add(bottom);
 
-            // Mensagem inicial automática da IA
+            // Mensagem inicial
             this.Load += (s, e) =>
             {
                 AdicionarBolha(
@@ -95,7 +96,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 );
             };
 
-            // Evento para envio e placeholder de "Digitando..." em caixinha
+            // Envio
             inputBox.KeyPress += async (sender, e) =>
             {
                 if (e.KeyChar == (char)Keys.Enter && !string.IsNullOrWhiteSpace(inputBox.Text))
@@ -104,7 +105,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                     AdicionarBolha(texto, isUser: true);
                     inputBox.Clear();
 
-                    // Caixinha de placeholder enquanto a IA pensa
+                    // placeholder
                     var placeholderPanel = new Panel
                     {
                         AutoSize = true,
@@ -124,15 +125,17 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                     mensagensPanel.Controls.Add(placeholderPanel);
                     mensagensPanel.ScrollControlIntoView(placeholderPanel);
 
-                    // Chamada à IA
+                    // chamada IA
                     string resposta = await EnviarParaOllama(texto);
 
-                    // Remove placeholder e adiciona resposta
+                    // replace placeholder
                     mensagensPanel.Controls.Remove(placeholderPanel);
                     placeholderPanel.Dispose();
-                    AdicionarBolha(resposta, isUser: false);
+                    var responsePanel = AdicionarBolha(resposta, isUser: false);
 
-                    // Impede o som do Windows ao pressionar Enter
+                    // adiciona feedback
+                    AdicionarFeedback(responsePanel);
+
                     e.Handled = true;
                 }
             };
@@ -147,7 +150,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                     model = "mistral",
                     stream = false,
                     messages = new[] {
-                        new { role = "system", content = "Você é um assistente de suporte técnico. Sempre pergunte se ajudou. Você somente responderá perguntas sobre Hardware e Software, qualquer outro tipo de pergunta, você dirá que não pode ajudar." },
+                        new { role = "system", content = "Você é um assistente de suporte técnico. Somente responde sobre Hardware e Software." },
                         new { role = "user", content = mensagem }
                     }
                 };
@@ -164,10 +167,9 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
             }
         }
 
-        private void AdicionarBolha(string texto, bool isUser)
+        private Panel AdicionarBolha(string texto, bool isUser)
         {
             int maxWidth = (ClientSize.Width / 2) - 40;
-
             var bubble = new Label
             {
                 Text = texto,
@@ -177,10 +179,8 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 Padding = new Padding(10),
                 Margin = new Padding(3),
                 BackColor = isUser ? Color.FromArgb(220, 248, 198) : Color.White,
-                ForeColor = Color.Black,
                 BorderStyle = BorderStyle.FixedSingle
             };
-
             var timeLabel = new Label
             {
                 Text = DateTime.Now.ToString("HH:mm"),
@@ -189,7 +189,6 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 AutoSize = true,
                 Margin = new Padding(3, 5, 3, 0)
             };
-
             var bubblePanel = new Panel
             {
                 AutoSize = true,
@@ -198,10 +197,10 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 Width = mensagensPanel.ClientSize.Width - 25,
                 BackColor = Color.Transparent
             };
-
             bubblePanel.Controls.Add(bubble);
             bubblePanel.Controls.Add(timeLabel);
 
+            // posicionamento
             if (isUser)
             {
                 bubble.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -221,7 +220,6 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                     bubble.Location = new Point(bubblePanel.Width - bubble.Width - 20, 0);
                 else
                     bubble.Location = new Point(10, 0);
-
                 if (isUser)
                     timeLabel.Location = new Point(bubblePanel.Width - timeLabel.Width - 20, bubble.Bottom + 5);
                 else
@@ -230,6 +228,80 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
 
             mensagensPanel.Controls.Add(bubblePanel);
             mensagensPanel.ScrollControlIntoView(bubblePanel);
+            return bubblePanel;
+        }
+
+        private void AdicionarFeedback(Panel afterPanel)
+        {
+            var feedbackPanel = new FlowLayoutPanel
+            {
+                AutoSize = true,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                Padding = new Padding(5),
+                Margin = new Padding(3),
+                BackColor = Color.LightGray,
+                Width = mensagensPanel.ClientSize.Width - 25
+            };
+            var pergunta = new Label
+            {
+                Text = "Essa resposta ajudou?",
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10),
+                Margin = new Padding(3)
+            };
+            var btnSim = new Button { Text = "Sim", AutoSize = true, Margin = new Padding(3) };
+            var btnNao = new Button { Text = "Não", AutoSize = true, Margin = new Padding(3) };
+
+            feedbackPanel.Controls.Add(pergunta);
+            feedbackPanel.Controls.Add(btnSim);
+            feedbackPanel.Controls.Add(btnNao);
+            mensagensPanel.Controls.Add(feedbackPanel);
+            mensagensPanel.ScrollControlIntoView(feedbackPanel);
+
+            btnSim.Click += (s, e) =>
+            {
+                feedbackPanel.Controls.Clear();
+                feedbackPanel.Controls.Add(new Label
+                {
+                    Text = "Que bom! Fico feliz em ajudar.",
+                    AutoSize = true,
+                    Font = new Font("Segoe UI", 10),
+                    Margin = new Padding(3)
+                });
+            };
+            btnNao.Click += (s, e) =>
+            {
+                feedbackPanel.Controls.Clear();
+                feedbackPanel.Controls.Add(new Label
+                {
+                    Text = "Gostaria de abrir um chamado?",
+                    AutoSize = true,
+                    Font = new Font("Segoe UI", 10),
+                    Margin = new Padding(3)
+                });
+                var btnAbrirSim = new Button { Text = "Sim", AutoSize = true, Margin = new Padding(3) };
+                var btnAbrirNao = new Button { Text = "Não", AutoSize = true, Margin = new Padding(3) };
+                feedbackPanel.Controls.Add(btnAbrirSim);
+                feedbackPanel.Controls.Add(btnAbrirNao);
+
+                btnAbrirSim.Click += (_, __) =>
+                {
+                    // navega na instância de UsuarioForm
+                    _usuarioForm.NavigateToCriarChamado();
+                };
+                btnAbrirNao.Click += (_, __) =>
+                {
+                    feedbackPanel.Controls.Clear();
+                    feedbackPanel.Controls.Add(new Label
+                    {
+                        Text = "Tudo bem. Caso precise, estou à disposição.",
+                        AutoSize = true,
+                        Font = new Font("Segoe UI", 10),
+                        Margin = new Padding(3)
+                    });
+                };
+            };
         }
     }
 }

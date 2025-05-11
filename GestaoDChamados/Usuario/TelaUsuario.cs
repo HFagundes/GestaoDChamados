@@ -2,9 +2,8 @@
 using System.Windows.Forms;
 using System.Drawing;
 using System.Data;
-using AtendeAI;
-using GestaoDChamados.Usuario.ChatBots;
 using GestaoDChamados.Usuario.ChatBots.chatgpt;
+using AtendeAI;
 
 namespace GestaoDChamados.Usuario
 {
@@ -68,7 +67,7 @@ namespace GestaoDChamados.Usuario
             string[] botoes = { "MEUS CHAMADOS", "AJUDA.AI", "CRIAR CHAMADO", "MENU" };
             foreach (string nome in botoes)
             {
-                Button btn = new Button
+                var btn = new Button
                 {
                     Text = nome,
                     Height = 45,
@@ -98,24 +97,14 @@ namespace GestaoDChamados.Usuario
 
                 if (nome == "CRIAR CHAMADO")
                 {
-                    btn.Click += (s, e) =>
-                    {
-                        mainContent.Controls.Clear();
-                        var formChamado = new CriarChamadoForm
-                        {
-                            TopLevel = false,
-                            Dock = DockStyle.Fill
-                        };
-                        mainContent.Controls.Add(formChamado);
-                        formChamado.Show();
-                    };
+                    btn.Click += (s, e) => NavigateToCriarChamado();
                 }
-                if (nome == "AJUDA.AI")
+                else if (nome == "AJUDA.AI")
                 {
                     btn.Click += (s, e) =>
                     {
                         mainContent.Controls.Clear();
-                        var chatForm = new ChatForm
+                        var chatForm = new ChatForm(this)
                         {
                             TopLevel = false,
                             Dock = DockStyle.Fill
@@ -124,7 +113,7 @@ namespace GestaoDChamados.Usuario
                         chatForm.Show();
                     };
                 }
-                if (nome == "MENU")
+                else if (nome == "MENU")
                 {
                     btn.Click += (s, e) =>
                     {
@@ -233,7 +222,6 @@ namespace GestaoDChamados.Usuario
 
         private Label CriarCard(string titulo, string valor, int posX)
         {
-            // Define cores por status
             Color bgColor;
             Color textColor;
             switch (titulo)
@@ -311,6 +299,21 @@ namespace GestaoDChamados.Usuario
             tabela2.Rows.Add("#142", "Erro de login", "30/04/2025", "Baixa");
             tabela2.Rows.Add("#138", "Solicitação concluída", "29/04/2025", "Média");
             dgvVencidos.DataSource = tabela2;
+        }
+
+        /// <summary>
+        /// Navega programaticamente para a aba "Criar Chamado" dentro do painel principal.
+        /// </summary>
+        public void NavigateToCriarChamado()
+        {
+            mainContent.Controls.Clear();
+            var formChamado = new CriarChamadoForm
+            {
+                TopLevel = false,
+                Dock = DockStyle.Fill
+            };
+            mainContent.Controls.Add(formChamado);
+            formChamado.Show();
         }
     }
 }
