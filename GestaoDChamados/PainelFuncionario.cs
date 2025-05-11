@@ -61,7 +61,7 @@ namespace ChamadosApp
         {
             var panel = new Panel
             {
-                Width = 200,
+                Width = 240,
                 BackColor = Color.Black,
                 Dock = DockStyle.Left,
             };
