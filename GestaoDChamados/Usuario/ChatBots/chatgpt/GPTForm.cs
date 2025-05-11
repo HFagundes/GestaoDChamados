@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using GestaoDChamados.Usuario; 
+using GestaoDChamados.Usuario;
 
 namespace GestaoDChamados.Usuario.ChatBots.chatgpt
 {
@@ -15,12 +15,26 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
         private readonly UsuarioForm _usuarioForm;
         private FlowLayoutPanel mensagensPanel;
         private TextBox inputBox;
+        private Button btnEnviar;
         private static readonly HttpClient client = new HttpClient();
 
         public ChatForm(UsuarioForm usuarioForm)
         {
             _usuarioForm = usuarioForm;
+            InitializeComponent();
 
+            // Mensagem inicial
+            this.Load += (s, e) =>
+            {
+                AdicionarBolha(
+                    "Olá! Eu sou a Ajuda.AI e estou aqui para te ajudar. Por favor, me conte qual problema está enfrentando para que eu possa te auxiliar da melhor maneira possível.",
+                    isUser: false
+                );
+            };
+        }
+
+        private void InitializeComponent()
+        {
             FormBorderStyle = FormBorderStyle.None;
             Width = 500;
             Height = 700;
@@ -34,24 +48,41 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 Dock = DockStyle.Top,
                 BackColor = Color.FromArgb(37, 211, 102)
             };
+
             var title = new Label
             {
-                Text = "ATENDE.AI",
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Text = "AJUDA.AI",
+                Font = new Font("Segoe UI", 15, FontStyle.Bold),
                 ForeColor = Color.White,
-                AutoSize = true,
-                Location = new Point((Width - 100) / 2, 18)
+                AutoSize = true
             };
+
+            // Centraliza o título no header
+            title.Location = new Point(
+                (header.Width - title.Width) / 2,
+                (header.Height - title.Height) / 2
+            );
+
             var avatar = new PictureBox
             {
                 Width = 40,
                 Height = 40,
-                Location = new Point(title.Left - 50, 10),
+                Location = new Point(10, (header.Height - 40) / 2),
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
                 SizeMode = PictureBoxSizeMode.Zoom,
                 Image = new Bitmap(40, 40)
             };
+
+            // Ajusta a posição do título quando o header for redimensionado
+            header.Resize += (s, e) =>
+            {
+                title.Location = new Point(
+                    (header.Width - title.Width) / 2,
+                    (header.Height - title.Height) / 2
+                );
+            };
+
             header.Controls.Add(title);
             header.Controls.Add(avatar);
             Controls.Add(header);
@@ -70,74 +101,106 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
             Controls.Add(mensagensPanel);
             mensagensPanel.BringToFront();
 
-            // Input
+            // Input com botão de enviar
             var bottom = new Panel
             {
-                Height = 53,
+                Height = 70,
                 Dock = DockStyle.Bottom,
                 BackColor = Color.White,
-                Padding = new Padding(12)
+                Padding = new Padding(10)
             };
+
+            var inputContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White
+            };
+
             inputBox = new TextBox
             {
                 Font = new Font("Segoe UI", 12),
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 60, 0),
+                Multiline = true,
+                Height = 50
             };
-            bottom.Controls.Add(inputBox);
+
+            btnEnviar = new Button
+            {
+                Text = "➤",
+                Dock = DockStyle.Right,
+                Width = 50,
+                Height = 50,
+                BackColor = Color.FromArgb(37, 211, 102),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            btnEnviar.FlatAppearance.BorderSize = 0;
+
+            // Efeito hover no botão de enviar
+            btnEnviar.MouseEnter += (s, e) => btnEnviar.BackColor = Color.FromArgb(30, 180, 90);
+            btnEnviar.MouseLeave += (s, e) => btnEnviar.BackColor = Color.FromArgb(37, 211, 102);
+
+            // Evento de clique do botão de enviar
+            btnEnviar.Click += async (sender, e) => await EnviarMensagem();
+
+            inputContainer.Controls.Add(inputBox);
+            inputContainer.Controls.Add(btnEnviar);
+            bottom.Controls.Add(inputContainer);
             Controls.Add(bottom);
 
-            // Mensagem inicial
-            this.Load += (s, e) =>
-            {
-                AdicionarBolha(
-                    "Olá! Eu sou a Ajuda.AI e estou aqui para te ajudar. Por favor, me conte qual problema está enfrentando para que eu possa te auxiliar da melhor maneira possível.",
-                    isUser: false
-                );
-            };
-
-            // Envio
+            // Evento KeyPress do inputBox
             inputBox.KeyPress += async (sender, e) =>
             {
                 if (e.KeyChar == (char)Keys.Enter && !string.IsNullOrWhiteSpace(inputBox.Text))
                 {
-                    var texto = inputBox.Text.Trim();
-                    AdicionarBolha(texto, isUser: true);
-                    inputBox.Clear();
-
-                    // placeholder
-                    var placeholderPanel = new Panel
-                    {
-                        AutoSize = true,
-                        Padding = new Padding(10),
-                        BackColor = Color.White,
-                        BorderStyle = BorderStyle.FixedSingle,
-                        Margin = new Padding(3)
-                    };
-                    var placeholderLabel = new Label
-                    {
-                        Text = "Digitando...",
-                        AutoSize = true,
-                        Font = new Font("Segoe UI", 10, FontStyle.Italic),
-                        ForeColor = Color.Gray
-                    };
-                    placeholderPanel.Controls.Add(placeholderLabel);
-                    mensagensPanel.Controls.Add(placeholderPanel);
-                    mensagensPanel.ScrollControlIntoView(placeholderPanel);
-
-                    // chamada IA
-                    string resposta = await EnviarParaOllama(texto);
-
-                    // replace placeholder
-                    mensagensPanel.Controls.Remove(placeholderPanel);
-                    placeholderPanel.Dispose();
-                    var responsePanel = AdicionarBolha(resposta, isUser: false);
-
-                    // adiciona feedback
-                    AdicionarFeedback(responsePanel);
-
+                    await EnviarMensagem();
                     e.Handled = true;
                 }
             };
+        }
+
+        private async Task EnviarMensagem()
+        {
+            if (!string.IsNullOrWhiteSpace(inputBox.Text))
+            {
+                var texto = inputBox.Text.Trim();
+                AdicionarBolha(texto, isUser: true);
+                inputBox.Clear();
+
+                // placeholder
+                var placeholderPanel = new Panel
+                {
+                    AutoSize = true,
+                    Padding = new Padding(10),
+                    BackColor = Color.White,
+                    BorderStyle = BorderStyle.FixedSingle,
+                    Margin = new Padding(3)
+                };
+                var placeholderLabel = new Label
+                {
+                    Text = "Digitando...",
+                    AutoSize = true,
+                    Font = new Font("Segoe UI", 10, FontStyle.Italic),
+                    ForeColor = Color.Gray
+                };
+                placeholderPanel.Controls.Add(placeholderLabel);
+                mensagensPanel.Controls.Add(placeholderPanel);
+                mensagensPanel.ScrollControlIntoView(placeholderPanel);
+
+                // chamada IA
+                string resposta = await EnviarParaOllama(texto);
+
+                // replace placeholder
+                mensagensPanel.Controls.Remove(placeholderPanel);
+                placeholderPanel.Dispose();
+                var responsePanel = AdicionarBolha(resposta, isUser: false);
+
+                // adiciona feedback
+                AdicionarFeedback(responsePanel);
+            }
         }
 
         private async Task<string> EnviarParaOllama(string mensagem)
@@ -249,8 +312,38 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 Font = new Font("Segoe UI", 10),
                 Margin = new Padding(3)
             };
-            var btnSim = new Button { Text = "Sim", AutoSize = true, Margin = new Padding(3) };
-            var btnNao = new Button { Text = "Não", AutoSize = true, Margin = new Padding(3) };
+
+            var btnSim = new Button
+            {
+                Text = "👍 Sim",
+                AutoSize = true,
+                Margin = new Padding(3),
+                BackColor = Color.FromArgb(76, 175, 80),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                Padding = new Padding(5, 2, 5, 2)
+            };
+            btnSim.FlatAppearance.BorderSize = 0;
+            btnSim.MouseEnter += (s, e) => btnSim.BackColor = Color.FromArgb(60, 150, 70);
+            btnSim.MouseLeave += (s, e) => btnSim.BackColor = Color.FromArgb(76, 175, 80);
+
+            var btnNao = new Button
+            {
+                Text = "👎 Não",
+                AutoSize = true,
+                Margin = new Padding(3),
+                BackColor = Color.FromArgb(244, 67, 54),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                Padding = new Padding(5, 2, 5, 2)
+            };
+            btnNao.FlatAppearance.BorderSize = 0;
+            btnNao.MouseEnter += (s, e) => btnNao.BackColor = Color.FromArgb(200, 50, 40);
+            btnNao.MouseLeave += (s, e) => btnNao.BackColor = Color.FromArgb(244, 67, 54);
 
             feedbackPanel.Controls.Add(pergunta);
             feedbackPanel.Controls.Add(btnSim);
@@ -263,12 +356,13 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 feedbackPanel.Controls.Clear();
                 feedbackPanel.Controls.Add(new Label
                 {
-                    Text = "Que bom! Fico feliz em ajudar.",
+                    Text = "Obrigado pelo feedback! 👍",
                     AutoSize = true,
                     Font = new Font("Segoe UI", 10),
                     Margin = new Padding(3)
                 });
             };
+
             btnNao.Click += (s, e) =>
             {
                 feedbackPanel.Controls.Clear();
@@ -279,16 +373,39 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                     Font = new Font("Segoe UI", 10),
                     Margin = new Padding(3)
                 });
-                var btnAbrirSim = new Button { Text = "Sim", AutoSize = true, Margin = new Padding(3) };
-                var btnAbrirNao = new Button { Text = "Não", AutoSize = true, Margin = new Padding(3) };
+
+                var btnAbrirSim = new Button
+                {
+                    Text = "Sim",
+                    AutoSize = true,
+                    Margin = new Padding(3),
+                    BackColor = Color.FromArgb(76, 175, 80),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Cursor = Cursors.Hand
+                };
+                btnAbrirSim.FlatAppearance.BorderSize = 0;
+
+                var btnAbrirNao = new Button
+                {
+                    Text = "Não",
+                    AutoSize = true,
+                    Margin = new Padding(3),
+                    BackColor = Color.FromArgb(244, 67, 54),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Cursor = Cursors.Hand
+                };
+                btnAbrirNao.FlatAppearance.BorderSize = 0;
+
                 feedbackPanel.Controls.Add(btnAbrirSim);
                 feedbackPanel.Controls.Add(btnAbrirNao);
 
                 btnAbrirSim.Click += (_, __) =>
                 {
-                    // navega na instância de UsuarioForm
                     _usuarioForm.NavigateToCriarChamado();
                 };
+
                 btnAbrirNao.Click += (_, __) =>
                 {
                     feedbackPanel.Controls.Clear();
