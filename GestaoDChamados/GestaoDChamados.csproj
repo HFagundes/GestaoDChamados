@@ -26,4 +26,10 @@
 		</None>
 	</ItemGroup>
 
+	<ItemGroup>
+		<None Update="resources\metacorp.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+	
 </Project>
