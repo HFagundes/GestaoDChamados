@@ -18,7 +18,7 @@ namespace AtendeAI
             {
                 var body = new
                 {
-                    model = "mistral", // ou outro modelo que você tenha instalado
+                    model = "mistral",
                     messages = new[]
                     {
                         new { role = "system", content = "Você é um assistente de suporte técnico que ajuda usuários com dúvidas e problemas. Sempre pergunte se a resposta ajudou." },

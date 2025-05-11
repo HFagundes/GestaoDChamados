@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.IO;
 using System.Windows.Forms;
 
 namespace AtendeAI
@@ -14,19 +16,55 @@ namespace AtendeAI
 
         public CriarChamadoForm()
         {
-            // Remove completamente a barra de título
             FormBorderStyle = FormBorderStyle.None;
-            ControlBox = false;       // esconde quaisquer botões de controle
+            ControlBox = false;
             StartPosition = FormStartPosition.CenterScreen;
-            BackColor = Color.White;
+            BackColor = Color.DarkGray;
             Size = new Size(600, 600);
 
             CriarComponentes();
         }
 
+        private Panel CriarTextBoxArredondada(out TextBox txt, Point location, Size size)
+        {
+            txt = new TextBox
+            {
+                BorderStyle = BorderStyle.None,
+                Location = new Point(10, 7),
+                Width = size.Width - 20
+            };
+
+            var panel = new Panel
+            {
+                Location = location,
+                Size = size,
+                BackColor = Color.White
+            };
+
+            panel.Paint += (s, e) =>
+            {
+                Graphics g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                using (GraphicsPath path = new GraphicsPath())
+                {
+                    path.AddArc(0, 0, 10, 10, 180, 90);
+                    path.AddArc(panel.Width - 11, 0, 10, 10, 270, 90);
+                    path.AddArc(panel.Width - 11, panel.Height - 11, 10, 10, 0, 90);
+                    path.AddArc(0, panel.Height - 11, 10, 10, 90, 90);
+                    path.CloseAllFigures();
+                    using (Pen pen = new Pen(Color.Gray, 1))
+                    {
+                        g.DrawPath(pen, path);
+                    }
+                }
+            };
+
+            panel.Controls.Add(txt);
+            return panel;
+        }
+
         private void CriarComponentes()
         {
-            // Título interno
             var lblTitulo = new Label
             {
                 Text = "Criar Chamado",
@@ -35,15 +73,12 @@ namespace AtendeAI
                 Location = new Point(20, 20)
             };
 
-            // Nome
             var lblNome = new Label { Text = "Nome:", Location = new Point(20, 60) };
-            txtNome = new TextBox { Location = new Point(20, 90), Width = 520 };
+            var pnlNome = CriarTextBoxArredondada(out txtNome, new Point(20, 90), new Size(520, 30));
 
-            // Email
             var lblEmail = new Label { Text = "Email:", Location = new Point(20, 120) };
-            txtEmail = new TextBox { Location = new Point(20, 150), Width = 520 };
+            var pnlEmail = CriarTextBoxArredondada(out txtEmail, new Point(20, 150), new Size(520, 30));
 
-            // Urgência
             var lblUrgencia = new Label { Text = "Urgência:", Location = new Point(20, 180) };
             cbUrgencia = new ComboBox
             {
@@ -54,21 +89,18 @@ namespace AtendeAI
             cbUrgencia.Items.AddRange(new[] { "Simples", "Média", "Urgente" });
             cbUrgencia.SelectedIndex = 1;
 
-            // Assunto
-            var lblAssunto = new Label { Text = "Assunto (máx 150 caracteres):", AutoSize=true, Location = new Point(20, 240) };
-            txtAssunto = new TextBox { Location = new Point(20, 270), Width = 520, MaxLength = 150 };
+            var lblAssunto = new Label { Text = "Assunto (máx 150 caracteres):", AutoSize = true, Location = new Point(20, 240) };
+            var pnlAssunto = CriarTextBoxArredondada(out txtAssunto, new Point(20, 270), new Size(520, 30));
+            txtAssunto.MaxLength = 150;
 
-            // Descrição
             var lblDescricao = new Label { Text = "Descrição:", Location = new Point(20, 300) };
-            txtDescricao = new TextBox
-            {
+            txtDescricao = new TextBox{
                 Location = new Point(20, 330),
                 Size = new Size(520, 100),
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical
             };
 
-            // Botão Anexo
             btnAnexo = new Button
             {
                 Text = "Anexar Arquivo",
@@ -85,7 +117,6 @@ namespace AtendeAI
                 AutoEllipsis = true
             };
 
-            // Botão Enviar
             btnEnviar = new Button
             {
                 Text = "Enviar",
@@ -98,14 +129,13 @@ namespace AtendeAI
             btnEnviar.FlatAppearance.BorderSize = 0;
             btnEnviar.Click += BtnEnviar_Click;
 
-            // Adiciona todos os controles ao Form
             Controls.AddRange(new Control[]
             {
                 lblTitulo,
-                lblNome, txtNome,
-                lblEmail, txtEmail,
+                lblNome, pnlNome,
+                lblEmail, pnlEmail,
                 lblUrgencia, cbUrgencia,
-                lblAssunto, txtAssunto,
+                lblAssunto, pnlAssunto,
                 lblDescricao, txtDescricao,
                 btnAnexo, lblArquivoSelecionado,
                 btnEnviar
@@ -124,7 +154,6 @@ namespace AtendeAI
 
         private void BtnEnviar_Click(object sender, EventArgs e)
         {
-            // aqui você colocaria validações e envio real
             MessageBox.Show("Chamado enviado com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
             Close();
         }

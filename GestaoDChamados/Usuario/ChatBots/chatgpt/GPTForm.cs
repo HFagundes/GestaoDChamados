@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Drawing;
-using System.Drawing.Printing;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using AtendeAI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -13,292 +11,200 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
 {
     public class ChatForm : Form
     {
+        private FlowLayoutPanel mensagensPanel;
         private TextBox inputBox;
         private Button sendButton;
-        private FlowLayoutPanel chatPanel;
         private static readonly HttpClient client = new HttpClient();
 
         public ChatForm()
         {
             FormBorderStyle = FormBorderStyle.None;
-            Dock = DockStyle.Fill;
-            BackColor = Color.Gray;
 
-            // Cabeçalho com nome e ícone
-            var headerPanel = new Panel
+            Width = 500;
+            Height = 700;
+            StartPosition = FormStartPosition.CenterScreen;
+            BackColor = Color.White;
+
+            // Cabeçalho fixo
+            var header = new Panel
             {
-                Height = 30,
-                BackColor = Color.FromArgb(37, 211, 102),
-                Padding = new Padding(0, 10, 0, 0), // Ajuste para evitar sobreposição
-                Margin = new Padding(0, 10, 0, 0) // Aplica margem superior de 20px
+                Height = 60,
+                Dock = DockStyle.Top,
+                BackColor = Color.FromArgb(37, 211, 102)
             };
 
-            // Definir a localização manualmente
-            headerPanel.Location = new Point(0, 20); // A partir do topo com a margem desejada
-
-            Controls.Add(headerPanel);
-
-            var pictureBox = new PictureBox
+            var title = new Label
             {
-                Width = 40,
-                Height = 40,
-                Left = 10,
-                Top = 10,
-                BackColor = Color.LightGray,
-                BorderStyle = BorderStyle.FixedSingle,
-                SizeMode = PictureBoxSizeMode.Zoom
-            };
-
-            var nameLabel = new Label
-            {
-                Text = "AjudaAI",
-                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Text = "ATENDE.AI",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
                 ForeColor = Color.White,
-                Location = new Point(60, 15),
+                Location = new Point(750, 18),
                 AutoSize = true
             };
 
-            headerPanel.Controls.Add(pictureBox);
-            headerPanel.Controls.Add(nameLabel);
-            Controls.Add(headerPanel);
-
-            // Painel de chat
-            chatPanel = new FlowLayoutPanel
+            var avatar = new PictureBox
             {
-                Dock = DockStyle.Fill,
-                AutoScroll = true,
-                WrapContents = false,
-                FlowDirection = FlowDirection.TopDown,
-                Padding = new Padding(10),
-                Margin = new Padding(0, headerPanel.Height, 50, 20) // Evita que a 1ª msg fique atrás do header
+                Width = 40,
+                Height = 40,
+                Location = new Point(700, 10),
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Image = new Bitmap(40, 40) // Substitua por um avatar real
             };
 
-            var bottomPanel = new Panel
+            header.Controls.Add(avatar);
+            header.Controls.Add(title);
+            Controls.Add(header);
+
+            // Painel de mensagens com margem superior
+            mensagensPanel = new FlowLayoutPanel
             {
-                Dock = DockStyle.Bottom,
-                Height = 50,
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                AutoScroll = true,
+                BackColor = Color.DarkGray,
                 Padding = new Padding(10),
-                BackColor = Color.WhiteSmoke
+                Margin = new Padding(0, header.Height + 20, 0, 0) // Margem superior corrigindo espaço inicial
+            };
+            Controls.Add(mensagensPanel);
+            mensagensPanel.BringToFront();
+
+            // Painel inferior com input
+            var bottom = new Panel
+            {
+                Height = 53,
+                Dock = DockStyle.Bottom,
+                BackColor = Color.White,
+                Padding = new Padding(12)
             };
 
             inputBox = new TextBox
             {
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10),
-                BorderStyle = BorderStyle.FixedSingle
+                Font = new Font("Segoe UI", 12),
+                Dock = DockStyle.Fill
             };
 
-            sendButton = new Button
+            bottom.Controls.Add(inputBox);
+            Controls.Add(bottom);
+
+            // Mensagem inicial automática da IA ao abrir o chat
+            this.Load += (s, e) =>
             {
-                Text = "Enviar",
-                Width = 80,
-                Dock = DockStyle.Right,
-                BackColor = Color.Green,
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                AdicionarBolha("Olá! Eu sou a Ajuda.AI e estou aqui para te ajudar. Por favor, me conte qual problema está enfrentando para que eu possa te auxiliar da melhor maneira possível.", false);
             };
-            sendButton.FlatAppearance.BorderSize = 0;
-            sendButton.Click += async (s, e) => await EnviarMensagem();
 
-            bottomPanel.Controls.Add(inputBox);
-            bottomPanel.Controls.Add(sendButton);
+            // Evento para enviar a mensagem quando Enter for pressionado
+            inputBox.KeyPress += async (sender, e) =>
+            {
+                if (e.KeyChar == (char)Keys.Enter && !string.IsNullOrEmpty(inputBox.Text.Trim()))
+                {
+                    var texto = inputBox.Text.Trim();
+                    AdicionarBolha(texto, isUser: true);
+                    inputBox.Clear();
 
-            Controls.Add(chatPanel);
-            Controls.Add(bottomPanel);
+                    string resposta = await EnviarParaOllama(texto);
+                    AdicionarBolha(resposta, isUser: false);
+
+                    // Impede o som do Windows ao pressionar Enter
+                    e.Handled = true;
+                }
+            };
         }
 
-        private async Task EnviarMensagem()
-        {
-            string userMsg = inputBox.Text.Trim();
-            if (string.IsNullOrEmpty(userMsg)) return;
-
-            AdicionarMensagem(userMsg, true);
-            inputBox.Clear();
-
-            string resposta = await EnviarMensagemParaOllama(userMsg);
-            AdicionarMensagem(resposta, false);
-            PerguntarSeAjudou();
-        }
-
-        private async Task<string> EnviarMensagemParaOllama(string mensagem)
+        private async Task<string> EnviarParaOllama(string mensagem)
         {
             try
             {
                 var body = new
                 {
                     model = "mistral",
-                    prompt = "Você é uma IA de chatBot , envie exatamente essa mensagem quando o chat for aberto (Olá como posso te ajudar?) ",
                     stream = false,
                     messages = new[] {
-                        new { role = "system", content = "Você é um assistente de suporte técnico que ajuda usuários com dúvidas e problemas. Sempre pergunte se a resposta ajudou." },
+                        new { role = "system", content = "Você é um assistente de suporte técnico. Sempre pergunte se ajudou. Você somente respondera as perguntas sobre Hardware e Software, qualquer outro tipo de pergunta , você ira falar que não Pode ajudar a pessoa. Aos fins das suas respostas mande um beijo" },
                         new { role = "user", content = mensagem }
                     }
                 };
-
                 var content = new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json");
-                var response = await client.PostAsync("http://localhost:11434/api/chat", content);
-                string responseContent = await response.Content.ReadAsStringAsync();
-
-                if (!response.IsSuccessStatusCode)
-                    return $"Erro na API: {response.StatusCode}\n{responseContent}";
-
-                JObject jsonResponse = JObject.Parse(responseContent);
-                return jsonResponse["message"]?["content"]?.ToString() ?? "Texto não encontrado.";
+                var resp = await client.PostAsync("http://localhost:11434/api/chat", content);
+                var text = await resp.Content.ReadAsStringAsync();
+                if (!resp.IsSuccessStatusCode) return $"Erro: {resp.StatusCode}";
+                var json = JObject.Parse(text);
+                return json["message"]?["content"]?.ToString() ?? "";
             }
             catch (Exception ex)
             {
-                return $"Erro ao enviar mensagem: {ex.Message}";
+                return $"Erro: {ex.Message}";
             }
         }
-        private void AdicionarMensagem(string msg, bool ehUsuario)
+
+        private void AdicionarBolha(string texto, bool isUser)
         {
+            int maxWidth = (this.ClientSize.Width / 2) - 40;
+
             var bubble = new Label
             {
-                Text = msg,
+                Text = texto,
                 AutoSize = true,
-                MaximumSize = new Size(220, 0),
+                MaximumSize = new Size(maxWidth, 0),
                 Font = new Font("Segoe UI", 10),
-                BackColor = ehUsuario ? Color.FromArgb(220, 248, 198) : Color.FromArgb(240, 240, 240),
-                ForeColor = Color.Black,
-                Padding = new Padding(8),  // Aumentando o padding para não ficar tão grudado.
+                Padding = new Padding(10),
                 Margin = new Padding(3),
-                TextAlign = ContentAlignment.MiddleLeft
+                BackColor = isUser ? Color.FromArgb(220, 248, 198) : Color.White,
+                ForeColor = Color.Black,
+                BorderStyle = BorderStyle.FixedSingle
             };
 
-            // Criação do container da bolha
-            var bubbleContainer = new Panel
+            var timeLabel = new Label
+            {
+                Text = DateTime.Now.ToString("HH:mm"),  // Exibe a hora no formato de 24 horas (ex: 15:30)
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.Gray,
+                AutoSize = true,
+                Margin = new Padding(3, 5, 3, 0) // Ajuste a margem conforme necessário
+            };
+
+            var bubblePanel = new Panel
             {
                 AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                Padding = new Padding(2),
-                BackColor = Color.Transparent
+                Padding = new Padding(3),
+                Margin = new Padding(3),
+                Width = mensagensPanel.ClientSize.Width - 25,
+                BackColor = Color.Transparent,
             };
 
-            bubbleContainer.Controls.Add(bubble);
+            bubblePanel.Controls.Add(bubble);
+            bubblePanel.Controls.Add(timeLabel);
 
-            // Usar um painel para controlar o alinhamento (não é necessário FlowLayoutPanel aqui)
-            var wrapperPanel = new Panel
+            if (isUser)
             {
-                Width = chatPanel.ClientSize.Width,
-                AutoSize = true,
-                BackColor = Color.Transparent
-            };
-
-            // Alinhamento das mensagens
-            if (ehUsuario)
-            {
-                // Mensagens do usuário à direita
-                wrapperPanel.Dock = DockStyle.Right;
+                bubble.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+                bubble.Location = new Point(bubblePanel.Width - bubble.Width - 20, 0);
+                timeLabel.Location = new Point(bubblePanel.Width - timeLabel.Width - 20, bubble.Bottom + 5); // Alinha o horário com a bolha
             }
             else
             {
-                // Mensagens do bot à esquerda
-                wrapperPanel.Dock = DockStyle.Left;
+                bubble.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+                bubble.Location = new Point(10, 0);
+                timeLabel.Location = new Point(10, bubble.Bottom + 5); // Alinha o horário com a bolha
             }
 
-            // Adicionando o container da bolha ao painel de fluxo
-            wrapperPanel.Controls.Add(bubbleContainer);
-            chatPanel.Controls.Add(wrapperPanel);
-
-            // Fazendo a rolagem automática para a última mensagem
-            chatPanel.ScrollControlIntoView(wrapperPanel);
-        }
-
-
-        private void PerguntarSeAjudou()
-        {
-            var pergunta = new Label
+            bubblePanel.Resize += (s, e) =>
             {
-                Text = "Essa resposta te ajudou?",
-                AutoSize = true,
-                Padding = new Padding(5),
-                Font = new Font("Segoe UI", 9, FontStyle.Italic),
-                Margin = new Padding(5, 10, 5, 2)
+                if (isUser)
+                    bubble.Location = new Point(bubblePanel.Width - bubble.Width - 20, 0);
+                else
+                    bubble.Location = new Point(10, 0);
+
+                if (isUser)
+                    timeLabel.Location = new Point(bubblePanel.Width - timeLabel.Width - 20, bubble.Bottom + 5);
+                else
+                    timeLabel.Location = new Point(10, bubble.Bottom + 5);
             };
 
-            var btnSim = new Button
-            {
-                Text = "Sim",
-                BackColor = Color.LightGreen,
-                FlatStyle = FlatStyle.Flat,
-                Margin = new Padding(5)
-            };
-            btnSim.Click += (s, e) =>
-            {
-                AdicionarMensagem("Fico feliz! Estarei aqui sempre que precisar 😊", false);
-                RemoverPergunta();
-            };
-
-            var btnNao = new Button
-            {
-                Text = "Não",
-                BackColor = Color.IndianRed,
-                FlatStyle = FlatStyle.Flat,
-                Margin = new Padding(5)
-            };
-            btnNao.Click += (s, e) =>
-            {
-                RemoverPergunta();
-                MostrarOpcoesAposNao();
-            };
-
-            chatPanel.Controls.Add(pergunta);
-            chatPanel.Controls.Add(btnSim);
-            chatPanel.Controls.Add(btnNao);
-        }
-
-        private void MostrarOpcoesAposNao()
-        {
-            var pergunta = new Label
-            {
-                Text = "Deseja abrir um chamado com um funcionário ou quer que eu tente novamente?",
-                AutoSize = true,
-                Padding = new Padding(5),
-                Margin = new Padding(5)
-            };
-
-            var btnTentar = new Button
-            {
-                Text = "Tentar novamente",
-                BackColor = Color.LightBlue,
-                FlatStyle = FlatStyle.Flat,
-                Margin = new Padding(5)
-            };
-            btnTentar.Click += (s, e) =>
-            {
-                AdicionarMensagem("Claro! Me diga de outra forma o que você precisa 😊", false);
-                RemoverPergunta();
-            };
-
-            var btnAbrirChamado = new Button
-            {
-                Text = "Abrir chamado",
-                BackColor = Color.Orange,
-                FlatStyle = FlatStyle.Flat,
-                Margin = new Padding(5)
-            };
-            btnAbrirChamado.Click += (s, e) =>
-            {
-                var chamadoForm = new CriarChamadoForm();
-                chamadoForm.TopLevel = false;
-                chamadoForm.Dock = DockStyle.Fill;
-                Controls.Clear();
-                Controls.Add(chamadoForm);
-                chamadoForm.Show();
-            };
-
-            chatPanel.Controls.Add(pergunta);
-            chatPanel.Controls.Add(btnTentar);
-            chatPanel.Controls.Add(btnAbrirChamado);
-        }
-
-        private void RemoverPergunta()
-        {
-            while (chatPanel.Controls.Count > 0 &&
-                  (chatPanel.Controls[chatPanel.Controls.Count - 1] is Button || chatPanel.Controls[chatPanel.Controls.Count - 1] is Label))
-            {
-                chatPanel.Controls.RemoveAt(chatPanel.Controls.Count - 1);
-            }
+            mensagensPanel.Controls.Add(bubblePanel);
+            mensagensPanel.ScrollControlIntoView(bubblePanel);
         }
     }
 }

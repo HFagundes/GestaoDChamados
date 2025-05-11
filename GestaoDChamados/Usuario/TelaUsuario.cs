@@ -26,7 +26,7 @@ namespace GestaoDChamados.Usuario
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.Sizable;
             MaximizeBox = true;
-            BackColor = Color.White;
+            BackColor = Color.DarkGray;
 
             sidebar = CriarSidebar();
             header = CriarHeader();
@@ -34,7 +34,7 @@ namespace GestaoDChamados.Usuario
             mainContent = new Panel()
             {
                 Dock = DockStyle.Fill,
-                BackColor = Color.White,
+                BackColor = Color.DarkGray,
             };
 
             Controls.Add(mainContent);
@@ -49,13 +49,14 @@ namespace GestaoDChamados.Usuario
             var panel = new Panel()
             {
                 Width = 200,
-                BackColor = Color.FromArgb(30, 60, 110),
-                Dock = DockStyle.Left
+                BackColor = Color.FromArgb(0, 0, 0),
+                Dock = DockStyle.Left,
             };
 
+            // Criando o logo
             Label logo = new Label()
             {
-                Text = "atende.AI",
+                Text = "ATENDE.AI",
                 ForeColor = Color.White,
                 Font = new Font("Segoe UI", 16, FontStyle.Bold),
                 Height = 80,
@@ -64,7 +65,8 @@ namespace GestaoDChamados.Usuario
             };
             panel.Controls.Add(logo);
 
-            string[] botoes = { "Meus Chamados", "Ajuda.AI", "Criar Chamado", "Menu" };
+            // Definindo os botões
+            string[] botoes = { "MEUS CHAMADOS", "AJUDA.AI", "CRIAR CHAMADO", "MENU" };
 
             foreach (string nome in botoes)
             {
@@ -75,17 +77,31 @@ namespace GestaoDChamados.Usuario
                     Dock = DockStyle.Top,
                     FlatStyle = FlatStyle.Flat,
                     ForeColor = Color.White,
-                    BackColor = Color.FromArgb(30, 60, 110),
+                    BackColor = Color.FromArgb(0, 0, 0),
                     Font = new Font("Segoe UI", 10, FontStyle.Regular),
-                    TextAlign = ContentAlignment.MiddleLeft,
-                    Padding = new Padding(20, 0, 0, 0)
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    Padding = new Padding(0)
                 };
                 btn.FlatAppearance.BorderSize = 0;
+
+                // Eventos de hover
+                btn.MouseEnter += (s, e) =>
+                {
+                    btn.BackColor = Color.White;
+                    btn.ForeColor = Color.Black;
+                };
+
+                btn.MouseLeave += (s, e) =>
+                {
+                    btn.BackColor = Color.FromArgb(0, 0, 0);
+                    btn.ForeColor = Color.White;
+                };
+
                 panel.Controls.Add(btn);
                 panel.Controls.SetChildIndex(btn, panel.Controls.Count - 2);
 
-                // Botões com ação
-                if (nome == "Criar Chamado")
+                // Ações dos botões
+                if (nome == "CRIAR CHAMADO")
                 {
                     btn.Click += (s, e) =>
                     {
@@ -98,7 +114,7 @@ namespace GestaoDChamados.Usuario
                     };
                 }
 
-                if (nome == "Ajuda.AI")
+                if (nome == "AJUDA.AI")
                 {
                     btn.Click += (s, e) =>
                     {
@@ -111,15 +127,24 @@ namespace GestaoDChamados.Usuario
                     };
                 }
 
-                if (nome == "Menu")
+                if (nome == "MENU")
                 {
                     btn.Click += (s, e) =>
                     {
                         mainContent.Controls.Clear();
-                        CriarMainContent(); // Recria o painel principal
+                        CriarMainContent();
                     };
                 }
             }
+
+           // LINHA MENU LATERAL
+            Panel linhaBranca = new Panel()
+            {
+                Width = 2,  //ESPESSURA DA LINHA 
+                Dock = DockStyle.Right,
+                BackColor = Color.White
+            };
+            panel.Controls.Add(linhaBranca);
 
             return panel;
         }
@@ -129,7 +154,7 @@ namespace GestaoDChamados.Usuario
             var panel = new Panel()
             {
                 Height = 60,
-                BackColor = Color.WhiteSmoke,
+                BackColor = Color.DarkGray,
                 Dock = DockStyle.Top
             };
 
