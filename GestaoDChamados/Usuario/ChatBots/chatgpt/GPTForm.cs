@@ -13,13 +13,11 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
     {
         private FlowLayoutPanel mensagensPanel;
         private TextBox inputBox;
-        private Button sendButton;
         private static readonly HttpClient client = new HttpClient();
 
         public ChatForm()
         {
             FormBorderStyle = FormBorderStyle.None;
-
             Width = 500;
             Height = 700;
             StartPosition = FormStartPosition.CenterScreen;
@@ -38,26 +36,26 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 Text = "ATENDE.AI",
                 Font = new Font("Segoe UI", 12, FontStyle.Bold),
                 ForeColor = Color.White,
-                Location = new Point(750, 18),
-                AutoSize = true
+                AutoSize = true,
+                Location = new Point((Width - 100) / 2, 18)
             };
 
             var avatar = new PictureBox
             {
                 Width = 40,
                 Height = 40,
-                Location = new Point(700, 10),
+                Location = new Point(title.Left - 50, 10),
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
                 SizeMode = PictureBoxSizeMode.Zoom,
                 Image = new Bitmap(40, 40) // Substitua por um avatar real
             };
 
-            header.Controls.Add(avatar);
             header.Controls.Add(title);
+            header.Controls.Add(avatar);
             Controls.Add(header);
 
-            // Painel de mensagens com margem superior
+            // Painel de mensagens
             mensagensPanel = new FlowLayoutPanel
             {
                 Dock = DockStyle.Fill,
@@ -66,7 +64,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 AutoScroll = true,
                 BackColor = Color.DarkGray,
                 Padding = new Padding(10),
-                Margin = new Padding(0, header.Height + 20, 0, 0) // Margem superior corrigindo espaço inicial
+                Margin = new Padding(0, header.Height + 20, 0, 0)
             };
             Controls.Add(mensagensPanel);
             mensagensPanel.BringToFront();
@@ -85,26 +83,53 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 Font = new Font("Segoe UI", 12),
                 Dock = DockStyle.Fill
             };
-
             bottom.Controls.Add(inputBox);
             Controls.Add(bottom);
 
-            // Mensagem inicial automática da IA ao abrir o chat
+            // Mensagem inicial automática da IA
             this.Load += (s, e) =>
             {
-                AdicionarBolha("Olá! Eu sou a Ajuda.AI e estou aqui para te ajudar. Por favor, me conte qual problema está enfrentando para que eu possa te auxiliar da melhor maneira possível.", false);
+                AdicionarBolha(
+                    "Olá! Eu sou a Ajuda.AI e estou aqui para te ajudar. Por favor, me conte qual problema está enfrentando para que eu possa te auxiliar da melhor maneira possível.",
+                    isUser: false
+                );
             };
 
-            // Evento para enviar a mensagem quando Enter for pressionado
+            // Evento para envio e placeholder de "Digitando..." em caixinha
             inputBox.KeyPress += async (sender, e) =>
             {
-                if (e.KeyChar == (char)Keys.Enter && !string.IsNullOrEmpty(inputBox.Text.Trim()))
+                if (e.KeyChar == (char)Keys.Enter && !string.IsNullOrWhiteSpace(inputBox.Text))
                 {
                     var texto = inputBox.Text.Trim();
                     AdicionarBolha(texto, isUser: true);
                     inputBox.Clear();
 
+                    // Caixinha de placeholder enquanto a IA pensa
+                    var placeholderPanel = new Panel
+                    {
+                        AutoSize = true,
+                        Padding = new Padding(10),
+                        BackColor = Color.White,
+                        BorderStyle = BorderStyle.FixedSingle,
+                        Margin = new Padding(3)
+                    };
+                    var placeholderLabel = new Label
+                    {
+                        Text = "Digitando...",
+                        AutoSize = true,
+                        Font = new Font("Segoe UI", 10, FontStyle.Italic),
+                        ForeColor = Color.Gray
+                    };
+                    placeholderPanel.Controls.Add(placeholderLabel);
+                    mensagensPanel.Controls.Add(placeholderPanel);
+                    mensagensPanel.ScrollControlIntoView(placeholderPanel);
+
+                    // Chamada à IA
                     string resposta = await EnviarParaOllama(texto);
+
+                    // Remove placeholder e adiciona resposta
+                    mensagensPanel.Controls.Remove(placeholderPanel);
+                    placeholderPanel.Dispose();
                     AdicionarBolha(resposta, isUser: false);
 
                     // Impede o som do Windows ao pressionar Enter
@@ -122,7 +147,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                     model = "mistral",
                     stream = false,
                     messages = new[] {
-                        new { role = "system", content = "Você é um assistente de suporte técnico. Sempre pergunte se ajudou. Você somente respondera as perguntas sobre Hardware e Software, qualquer outro tipo de pergunta , você ira falar que não Pode ajudar a pessoa. Aos fins das suas respostas mande um beijo" },
+                        new { role = "system", content = "Você é um assistente de suporte técnico. Sempre pergunte se ajudou. Você somente responderá perguntas sobre Hardware e Software, qualquer outro tipo de pergunta, você dirá que não pode ajudar." },
                         new { role = "user", content = mensagem }
                     }
                 };
@@ -131,7 +156,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 var text = await resp.Content.ReadAsStringAsync();
                 if (!resp.IsSuccessStatusCode) return $"Erro: {resp.StatusCode}";
                 var json = JObject.Parse(text);
-                return json["message"]?["content"]?.ToString() ?? "";
+                return json["message"]?["content"]?.ToString() ?? string.Empty;
             }
             catch (Exception ex)
             {
@@ -141,7 +166,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
 
         private void AdicionarBolha(string texto, bool isUser)
         {
-            int maxWidth = (this.ClientSize.Width / 2) - 40;
+            int maxWidth = (ClientSize.Width / 2) - 40;
 
             var bubble = new Label
             {
@@ -158,11 +183,11 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
 
             var timeLabel = new Label
             {
-                Text = DateTime.Now.ToString("HH:mm"),  // Exibe a hora no formato de 24 horas (ex: 15:30)
+                Text = DateTime.Now.ToString("HH:mm"),
                 Font = new Font("Segoe UI", 8),
                 ForeColor = Color.Gray,
                 AutoSize = true,
-                Margin = new Padding(3, 5, 3, 0) // Ajuste a margem conforme necessário
+                Margin = new Padding(3, 5, 3, 0)
             };
 
             var bubblePanel = new Panel
@@ -171,7 +196,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 Padding = new Padding(3),
                 Margin = new Padding(3),
                 Width = mensagensPanel.ClientSize.Width - 25,
-                BackColor = Color.Transparent,
+                BackColor = Color.Transparent
             };
 
             bubblePanel.Controls.Add(bubble);
@@ -181,13 +206,13 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
             {
                 bubble.Anchor = AnchorStyles.Top | AnchorStyles.Right;
                 bubble.Location = new Point(bubblePanel.Width - bubble.Width - 20, 0);
-                timeLabel.Location = new Point(bubblePanel.Width - timeLabel.Width - 20, bubble.Bottom + 5); // Alinha o horário com a bolha
+                timeLabel.Location = new Point(bubblePanel.Width - timeLabel.Width - 20, bubble.Bottom + 5);
             }
             else
             {
                 bubble.Anchor = AnchorStyles.Top | AnchorStyles.Left;
                 bubble.Location = new Point(10, 0);
-                timeLabel.Location = new Point(10, bubble.Bottom + 5); // Alinha o horário com a bolha
+                timeLabel.Location = new Point(10, bubble.Bottom + 5);
             }
 
             bubblePanel.Resize += (s, e) =>
