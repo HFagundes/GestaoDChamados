@@ -15,27 +15,26 @@ namespace GestaoDChamados.Funcionario
 
         private void InitializeCustomComponents()
         {
-            // O Form ocupa todo o espaço disponível
-            this.Dock = DockStyle.Fill;
             this.BackColor = Color.FromArgb(235, 234, 230);
 
-            // Container principal com padding para evitar corte
+            // Container Centralizado
             var container = new Panel
             {
-                Dock = DockStyle.Fill,
+                Size = new Size(800, 400),
                 BackColor = Color.WhiteSmoke,
-                Padding = new Padding(30)  // margem interna
+                Anchor = AnchorStyles.None,
             };
-            this.Controls.Add(container);
+            container.Location = new Point(
+                (this.ClientSize.Width - container.Width) / 2,
+                (this.ClientSize.Height - container.Height) / 2);
 
-            // Cabeçalho estilizado
+            // Header estilizado
             var header = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 60,
-                BackColor = Color.FromArgb(200, 200, 200)
+                Height = 50,
+                BackColor = Color.FromArgb(200, 200, 200),
             };
-            container.Controls.Add(header);
 
             var lblHeader = new Label
             {
@@ -47,11 +46,10 @@ namespace GestaoDChamados.Funcionario
             };
             header.Controls.Add(lblHeader);
 
-            // DataGridView ocupa o restante, com margin para evitar corte
+            // DataGridView estilizado
             var dgvChamados = new DataGridView
             {
                 Dock = DockStyle.Fill,
-                Margin = new Padding(0),
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
                 ReadOnly = true,
@@ -71,6 +69,7 @@ namespace GestaoDChamados.Funcionario
             dgvChamados.Columns.Add("DataAbertura", "Data Abertura");
             dgvChamados.Columns.Add("Prioridade", "Prioridade");
 
+            // Coluna de Ações (botão)
             var btnAbrir = new DataGridViewButtonColumn
             {
                 Name = "AbrirChamado",
@@ -81,14 +80,27 @@ namespace GestaoDChamados.Funcionario
             };
             dgvChamados.Columns.Add(btnAbrir);
 
-            // Exemplo de linhas
+            // Linhas de exemplo
             dgvChamados.Rows.Add("#151", "Erro ao abrir app", "02/05/2025", "Média");
             dgvChamados.Rows.Add("#152", "Problema de rede", "02/05/2025", "Alta");
 
             // Linhas alternadas
             dgvChamados.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(250, 250, 250);
 
+            // Aplica bordas arredondadas (simulado via Padding)
+            container.Padding = new Padding(10);
             container.Controls.Add(dgvChamados);
+            container.Controls.Add(header);
+
+            this.Controls.Add(container);
+
+            // Centraliza container ao redimensionar
+            this.Resize += (s, e) =>
+            {
+                container.Location = new Point(
+                    (this.ClientSize.Width - container.Width) / 2,
+                    (this.ClientSize.Height - container.Height) / 2);
+            };
         }
     }
 }
