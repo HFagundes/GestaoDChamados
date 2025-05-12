@@ -27,7 +27,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
             this.Load += (s, e) =>
             {
                 AdicionarBolha(
-                    "Olá! Eu sou a Ajuda.AI e estou aqui para te ajudar. Por favor, me conte qual problema está enfrentando para que eu possa te auxiliar da melhor maneira possível.",
+                    "Olá! Eu sou o Bitinho da Ajuda.AI e estou aqui para te ajudar. Por favor, me conte qual problema está enfrentando para que eu possa te auxiliar da melhor maneira possível.",
                     isUser: false
                 );
             };
@@ -46,45 +46,38 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
             {
                 Height = 60,
                 Dock = DockStyle.Top,
-                BackColor = Color.FromArgb(37, 211, 102)
+                BackColor = Color.Blue
             };
-
-            var title = new Label
-            {
-                Text = "AJUDA.AI",
-                Font = new Font("Segoe UI", 15, FontStyle.Bold),
-                ForeColor = Color.White,
-                AutoSize = true
-            };
-
-            // Centraliza o título no header
-            title.Location = new Point(
-                (header.Width - title.Width) / 2,
-                (header.Height - title.Height) / 2
-            );
 
             var avatar = new PictureBox
             {
-                Width = 40,
-                Height = 40,
-                Location = new Point(10, (header.Height - 40) / 2),
-                BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                Image = new Bitmap(40, 40)
+                Width = 90,
+                Height = 90,
+                Location = new Point(10, -7),
+                BorderStyle = BorderStyle.None,
+                SizeMode = PictureBoxSizeMode.Zoom
             };
 
-            // Ajusta a posição do título quando o header for redimensionado
-            header.Resize += (s, e) =>
+            try
             {
-                title.Location = new Point(
-                    (header.Width - title.Width) / 2,
-                    (header.Height - title.Height) / 2
-                );
+                avatar.Image = Image.FromFile("resources/bitinho.png"); // Caminho da imagem
+            }
+            catch
+            {
+                avatar.BackColor = Color.Gray; // Fallback visual
+            }
+
+            var title = new Label
+            {
+                Text = "Bitinho - AJUDA.AI",
+                Font = new Font("Segoe UI", 15, FontStyle.Bold),
+                ForeColor = Color.White,
+                AutoSize = true,
+                Location = new Point(avatar.Right + 10, (header.Height - 30) / 2)
             };
 
-            header.Controls.Add(title);
             header.Controls.Add(avatar);
+            header.Controls.Add(title);
             Controls.Add(header);
 
             // Painel de mensagens
