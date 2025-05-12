@@ -11,6 +11,7 @@ namespace ChamadosApp
 {
     public class LoginForm : Form
     {
+        private string usernameAutenticado;
         private Panel panelMain;
         private Label lblWelcome;
         private TextBox txtUsername;
@@ -141,31 +142,28 @@ namespace ChamadosApp
             string user = txtUsername.Text.Trim();
             string pass = txtPassword.Text;
 
-            try
-            {
-                if (chkRemember.Checked)
-                    File.WriteAllText(rememberFile, user);
-                else if (File.Exists(rememberFile))
-                    File.Delete(rememberFile);
-            }
-            catch { }
-
             var (tipoUsuario, idUsuario) = AutenticarUsuario(user, pass);
 
             if (tipoUsuario == "admin")
             {
+                usernameAutenticado = user; // Armazena o usuário autenticado
                 MessageBox.Show("Login efetuado com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                new AdminForm().Show();
+                AdminForm adminForm = new AdminForm(); // Passa o usuário para o AdminForm
+                adminForm.Show();
                 this.Hide();
             }
             else if (tipoUsuario == "funcionario")
             {
-                new FuncionarioForm().Show();
+                usernameAutenticado = user; // Armazena o usuário autenticado
+                FuncionarioForm funcionarioForm = new FuncionarioForm();
+                funcionarioForm.Show();
                 this.Hide();
             }
             else if (tipoUsuario == "usuario")
             {
-                new UsuarioForm().Show();
+                usernameAutenticado = user; // Armazena o usuário autenticado
+                UsuarioForm usuarioForm = new UsuarioForm(usernameAutenticado); // Passa o usuário para o UsuarioForm
+                usuarioForm.Show();
                 this.Hide();
             }
             else
@@ -180,21 +178,37 @@ namespace ChamadosApp
         {
             try
             {
-                using var conn = new NpgsqlConnection(connectionString);
-                conn.Open();
-                string query = "SELECT id, tipo FROM usuarios WHERE usuario = @usuario AND senha = @senha";
-                using var cmd = new NpgsqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("usuario", username);
-                cmd.Parameters.AddWithValue("senha", password);
-                using var reader = cmd.ExecuteReader();
-                if (reader.Read())
-                    return (reader.GetString(1), reader.GetInt32(0));
+                using (var conn = new NpgsqlConnection(connectionString))
+                {
+                    conn.Open();
+
+                    string query = "SELECT id, tipo FROM usuarios WHERE usuario = @usuario AND senha = @senha";
+                    using (var cmd = new NpgsqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("usuario", username);
+                        cmd.Parameters.AddWithValue("senha", password);
+
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                int id = reader.GetInt32(0);
+                                string tipo = reader.GetString(1);
+                                return (tipo, id);
+                            }
+                            else
+                            {
+                                return (null, null);
+                            }
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Erro ao conectar ao banco: " + ex.Message, "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return (null, null);
             }
-            return (null, null);
         }
 
         private Image AplicarDegradeCircular(Image img)

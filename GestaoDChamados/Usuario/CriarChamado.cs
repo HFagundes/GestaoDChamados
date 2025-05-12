@@ -4,19 +4,22 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using Npgsql;
 
 namespace AtendeAI
 {
     public class CriarChamadoForm : Form
     {
+        private string usuarioAutenticado;
         private TextBox txtNome, txtEmail, txtAssunto, txtDescricao;
         private ComboBox cbUrgencia;
         private Button btnAnexo, btnLimparAnexo, btnEnviar;
         private Label lblArquivoSelecionado;
         private string arquivoSelecionado = string.Empty;
 
-        public CriarChamadoForm()
+        public CriarChamadoForm(string usuario)
         {
+            this.usuarioAutenticado = usuario;
             FormBorderStyle = FormBorderStyle.None;
             ControlBox = false;
             StartPosition = FormStartPosition.CenterScreen;
@@ -172,48 +175,59 @@ namespace AtendeAI
 
         private void BtnEnviar_Click(object sender, EventArgs e)
         {
-            // Validações antes do envio
-            if (string.IsNullOrWhiteSpace(txtNome.Text))
+            string connString = "Host=localhost;Port=5432;Database=GestaoChamados;Username=postgres;Password=123;";
+
+            try
             {
-                MessageBox.Show("Por favor, preencha o Nome.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtNome.Focus();
-                return;
-            }
+                using var conn = new NpgsqlConnection(connString);
+                conn.Open();
 
-            // Regex de email corrigido como string verbatim para não gerar erros de escape
-            var emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-            if (string.IsNullOrWhiteSpace(txtEmail.Text) || !Regex.IsMatch(txtEmail.Text, emailPattern))
+                using var cmd = new NpgsqlCommand(
+                    "INSERT INTO chamados (nome, email, urgencia, assunto, descricao, imagemdados, datacriacao, usuario, situacao) " +
+                    "VALUES (@nome, @email, @urgencia, @assunto, @descricao, @imagem, @datacriacao, @usuario, @situacao)", conn);
+
+                cmd.Parameters.AddWithValue("@nome", txtNome.Text);
+                cmd.Parameters.AddWithValue("@email", txtEmail.Text);
+                cmd.Parameters.AddWithValue("@urgencia", cbUrgencia.SelectedItem.ToString());
+                cmd.Parameters.AddWithValue("@assunto", txtAssunto.Text);
+                cmd.Parameters.AddWithValue("@descricao", txtDescricao.Text);
+
+                if (!string.IsNullOrEmpty(arquivoSelecionado) && File.Exists(arquivoSelecionado))
+                {
+                    byte[] imagemBytes = File.ReadAllBytes(arquivoSelecionado);
+                    cmd.Parameters.AddWithValue("@imagem", imagemBytes);
+                }
+                else
+                {
+                    cmd.Parameters.AddWithValue("@imagem", DBNull.Value);
+                }
+
+                // Adicionando o usuário autenticado
+                cmd.Parameters.AddWithValue("@usuario", usuarioAutenticado);
+
+                // Definir a data de criação como a data e hora atuais
+                cmd.Parameters.AddWithValue("@datacriacao", DateTime.Now);
+
+                // Adicionando a situação como "Aberto"
+                cmd.Parameters.AddWithValue("@situacao", "Abertos");
+
+                cmd.ExecuteNonQuery();
+                MessageBox.Show("Chamado enviado com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // Limpar os campos
+                txtNome.Text = "";
+                txtEmail.Text = "";
+                cbUrgencia.SelectedIndex = 1;
+                txtAssunto.Text = "";
+                txtDescricao.Text = "";
+                lblArquivoSelecionado.Text = "Nenhum arquivo selecionado";
+                arquivoSelecionado = "";
+            }
+            catch (Exception ex)
             {
-                MessageBox.Show("Por favor, insira um Email válido.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtEmail.Focus();
-                return;
+                MessageBox.Show("Erro ao enviar chamado: " + ex.Message, "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-            if (string.IsNullOrWhiteSpace(txtAssunto.Text))
-            {
-                MessageBox.Show("Por favor, preencha o Assunto.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtAssunto.Focus();
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(txtDescricao.Text))
-            {
-                MessageBox.Show("Por favor, preencha a Descrição.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtDescricao.Focus();
-                return;
-            }
-
-            // TODO: implementar lógica de envio do chamado
-            MessageBox.Show("Chamado enviado com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-            // Limpa os campos após envio
-            txtNome.Text = string.Empty;
-            txtEmail.Text = string.Empty;
-            txtAssunto.Text = string.Empty;
-            txtDescricao.Text = string.Empty;
-            cbUrgencia.SelectedIndex = 1;
-            arquivoSelecionado = string.Empty;
-            lblArquivoSelecionado.Text = "Nenhum arquivo selecionado";
         }
+
     }
 }
