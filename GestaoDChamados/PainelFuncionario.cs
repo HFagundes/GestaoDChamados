@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using GestaoDChamados.Funcionario;  // forms ChamadosEmAberto, ChamadosEmAndamento, ChamadosEncerrados
+using ChamadosApp; // para LoginForm
 
 namespace ChamadosApp
 {
@@ -176,6 +177,29 @@ namespace ChamadosApp
                 BackColor = Color.Transparent
             };
             panel.Controls.Add(logo);
+
+            // Botão de Sair/Logout
+            var btnLogout = new Button
+            {
+                Text = "SAIR",
+                Height = 45,
+                Dock = DockStyle.Bottom,
+                FlatStyle = FlatStyle.Flat,
+                ForeColor = Color.White,
+                BackColor = Color.Black,
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            btnLogout.FlatAppearance.BorderSize = 0;
+            btnLogout.MouseEnter += (s, e) => { btnLogout.BackColor = Color.White; btnLogout.ForeColor = Color.Black; };
+            btnLogout.MouseLeave += (s, e) => { btnLogout.BackColor = Color.Black; btnLogout.ForeColor = Color.White; };
+            btnLogout.Click += (s, e) =>
+            {
+                var loginForm = new LoginForm();
+                loginForm.Show();
+                this.Close();
+            };
+            panel.Controls.Add(btnLogout);
 
             return panel;
         }

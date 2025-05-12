@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Data;
 using GestaoDChamados.Usuario.ChatBots.chatgpt;
 using AtendeAI;
+using ChamadosApp; // para LoginForm
 
 namespace GestaoDChamados.Usuario
 {
@@ -172,6 +173,37 @@ namespace GestaoDChamados.Usuario
             };
             panel.Controls.Add(logo);
 
+            // Botão de logout
+            var btnLogout = new Button
+            {
+                Text = "SAIR",
+                Height = 45,
+                Dock = DockStyle.Bottom,
+                FlatStyle = FlatStyle.Flat,
+                ForeColor = Color.White,
+                BackColor = Color.Black,
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            btnLogout.FlatAppearance.BorderSize = 0;
+            btnLogout.MouseEnter += (s, e) =>
+            {
+                btnLogout.BackColor = Color.White;
+                btnLogout.ForeColor = Color.Black;
+            };
+            btnLogout.MouseLeave += (s, e) =>
+            {
+                btnLogout.BackColor = Color.Black;
+                btnLogout.ForeColor = Color.White;
+            };
+            btnLogout.Click += (s, e) =>
+            {
+                var loginForm = new LoginForm();
+                loginForm.Show();
+                this.Close();
+            };
+            panel.Controls.Add(btnLogout);
+
             return panel;
         }
 
@@ -228,7 +260,6 @@ namespace GestaoDChamados.Usuario
             };
             painel.Controls.Add(lblEmpresa);
 
-            // Boas-vindas
             string nomeUsuario = "João da Silva";
             string cargoUsuario = "Analista de Suporte";
 
@@ -242,7 +273,6 @@ namespace GestaoDChamados.Usuario
             };
             painel.Controls.Add(lblBemVindo);
 
-            // Avisos
             var lblAviso = new Label
             {
                 Text = "Avisos: Nenhum aviso no momento.",
@@ -253,7 +283,6 @@ namespace GestaoDChamados.Usuario
             };
             painel.Controls.Add(lblAviso);
 
-            // Cards de resumo
             string[] titulos = { "Abertos", "Em Andamento", "Resolvidos", "Vencidos" };
             int[] valores = { 4, 2, 10, 1 };
             Color[] cores = { Color.Blue, Color.Gold, Color.Green, Color.Red };
@@ -268,7 +297,7 @@ namespace GestaoDChamados.Usuario
                     BorderStyle = BorderStyle.FixedSingle
                 };
 
-                var lblTitulo = new Label
+                var lblCardTitulo = new Label
                 {
                     Text = titulos[i],
                     Font = new Font("Segoe UI", 12, FontStyle.Bold),
@@ -285,7 +314,7 @@ namespace GestaoDChamados.Usuario
                     AutoSize = true
                 };
 
-                card.Controls.Add(lblTitulo);
+                card.Controls.Add(lblCardTitulo);
                 card.Controls.Add(lblValor);
                 painel.Controls.Add(card);
             }

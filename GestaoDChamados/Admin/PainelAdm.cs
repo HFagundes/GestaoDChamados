@@ -5,7 +5,7 @@ using System.Data;
 using GestaoDChamados.Usuario.ChatBots.chatgpt;
 using AtendeAI;
 using GestaoDChamados.Admin;
-
+using ChamadosApp; // para LoginForm
 
 namespace ChamadosApp
 {
@@ -45,6 +45,7 @@ namespace ChamadosApp
 
             CriarMainContent();
         }
+
         private Panel CriarSidebar()
         {
             var panel = new Panel
@@ -84,6 +85,7 @@ namespace ChamadosApp
                     button.BackColor = Color.Black;
                     button.ForeColor = Color.White;
                 };
+
                 if (nome == "MENU")
                 {
                     button.Click += (s, e) =>
@@ -92,50 +94,23 @@ namespace ChamadosApp
                         CriarMainContent();
                     };
                 }
-                else if (nome == "CADASTRO DE FUNCIONÁRIO")
+                else if (nome == "CADASTRO DE FUNCIONÁRIO" || nome == "CADASTRO DE USUÁRIO")
                 {
                     button.Click += (s, e) =>
                     {
                         mainContent.Controls.Clear();
-                        var chatForm = new CadastroFuncionario
+                        var form = new CadastroFuncionario
                         {
                             TopLevel = false,
                             Dock = DockStyle.Fill
                         };
-                        mainContent.Controls.Add(chatForm);
-                        chatForm.Show();
+                        mainContent.Controls.Add(form);
+                        form.Show();
                     };
                 }
-                else if (nome == "CADASTRO DE USUÁRIO")
-                {
-                    button.Click += (s, e) =>
-                    {
-                        mainContent.Controls.Clear();
-                        var chatForm = new CadastroFuncionario
-                        {
-                            TopLevel = false,
-                            Dock = DockStyle.Fill
-                        };
-                        mainContent.Controls.Add(chatForm);
-                        chatForm.Show();
-                    };
-                }
-                //else if (nome == "LISTA DE CADASTROS")
-                //{
-                //    button.Click += (s, e) =>
-                //    {
-                //        mainContent.Controls.Clear();
-                //        var chatForm = new ListarCadastro
-                //        {
-                //            TopLevel = false,
-                //            Dock = DockStyle.Fill
-                //        };
-                //        mainContent.Controls.Add(chatForm);
-                //        chatForm.Show();
-                //    };
-                //}
+                // else if LISTA DE CADASTROS, etc.
 
-                panel.Controls.Add(button); // Adiciona o botão à lista
+                panel.Controls.Add(button);
             }
 
             // Espaço entre logo e botões
@@ -156,6 +131,37 @@ namespace ChamadosApp
                 BackColor = Color.Transparent
             };
             panel.Controls.Add(logo);
+
+            // Botão de sair (logout)
+            var btnLogout = new Button
+            {
+                Text = "SAIR",
+                Height = 45,
+                Dock = DockStyle.Bottom,
+                FlatStyle = FlatStyle.Flat,
+                ForeColor = Color.White,
+                BackColor = Color.Black,
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            btnLogout.FlatAppearance.BorderSize = 0;
+            btnLogout.MouseEnter += (s, e) =>
+            {
+                btnLogout.BackColor = Color.White;
+                btnLogout.ForeColor = Color.Black;
+            };
+            btnLogout.MouseLeave += (s, e) =>
+            {
+                btnLogout.BackColor = Color.Black;
+                btnLogout.ForeColor = Color.White;
+            };
+            btnLogout.Click += (s, e) =>
+            {
+                var loginForm = new LoginForm();
+                loginForm.Show();
+                this.Close();
+            };
+            panel.Controls.Add(btnLogout);
 
             return panel;
         }
@@ -194,9 +200,9 @@ namespace ChamadosApp
                 Anchor = AnchorStyles.Top
             };
 
-            // Logo da empresa
+            // Conteúdo adicional aqui
 
-
+            mainContent.Controls.Add(painelCentral);
         }
     }
 }

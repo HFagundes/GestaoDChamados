@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace AtendeAI
@@ -10,9 +11,9 @@ namespace AtendeAI
     {
         private TextBox txtNome, txtEmail, txtAssunto, txtDescricao;
         private ComboBox cbUrgencia;
-        private Button btnAnexo, btnEnviar;
+        private Button btnAnexo, btnLimparAnexo, btnEnviar;
         private Label lblArquivoSelecionado;
-        private string arquivoSelecionado = "";
+        private string arquivoSelecionado = string.Empty;
 
         public CriarChamadoForm()
         {
@@ -43,19 +44,17 @@ namespace AtendeAI
 
             panel.Paint += (s, e) =>
             {
-                Graphics g = e.Graphics;
+                var g = e.Graphics;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
-                using (GraphicsPath path = new GraphicsPath())
+                using (var path = new GraphicsPath())
                 {
                     path.AddArc(0, 0, 10, 10, 180, 90);
                     path.AddArc(panel.Width - 11, 0, 10, 10, 270, 90);
                     path.AddArc(panel.Width - 11, panel.Height - 11, 10, 10, 0, 90);
                     path.AddArc(0, panel.Height - 11, 10, 10, 90, 90);
                     path.CloseAllFigures();
-                    using (Pen pen = new Pen(Color.Gray, 1))
-                    {
+                    using (var pen = new Pen(Color.Gray, 1))
                         g.DrawPath(pen, path);
-                    }
                 }
             };
 
@@ -94,7 +93,8 @@ namespace AtendeAI
             txtAssunto.MaxLength = 150;
 
             var lblDescricao = new Label { Text = "Descrição:", Location = new Point(20, 300) };
-            txtDescricao = new TextBox{
+            txtDescricao = new TextBox
+            {
                 Location = new Point(20, 330),
                 Size = new Size(520, 100),
                 Multiline = true,
@@ -109,10 +109,22 @@ namespace AtendeAI
             };
             btnAnexo.Click += BtnAnexo_Click;
 
+            btnLimparAnexo = new Button
+            {
+                Text = "X",
+                Location = new Point(btnAnexo.Location.X + btnAnexo.Width + 5, btnAnexo.Location.Y),
+                Size = new Size(25, btnAnexo.Height),
+                BackColor = Color.Red,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnLimparAnexo.FlatAppearance.BorderSize = 0;
+            btnLimparAnexo.Click += BtnLimparAnexo_Click;
+
             lblArquivoSelecionado = new Label
             {
                 Text = "Nenhum arquivo selecionado",
-                Location = new Point(180, 445),
+                Location = new Point(btnLimparAnexo.Location.X + btnLimparAnexo.Width + 10, btnAnexo.Location.Y + 5),
                 Width = 360,
                 AutoEllipsis = true
             };
@@ -137,7 +149,7 @@ namespace AtendeAI
                 lblUrgencia, cbUrgencia,
                 lblAssunto, pnlAssunto,
                 lblDescricao, txtDescricao,
-                btnAnexo, lblArquivoSelecionado,
+                btnAnexo, btnLimparAnexo, lblArquivoSelecionado,
                 btnEnviar
             });
         }
@@ -152,10 +164,56 @@ namespace AtendeAI
             }
         }
 
+        private void BtnLimparAnexo_Click(object sender, EventArgs e)
+        {
+            arquivoSelecionado = string.Empty;
+            lblArquivoSelecionado.Text = "Nenhum arquivo selecionado";
+        }
+
         private void BtnEnviar_Click(object sender, EventArgs e)
         {
+            // Validações antes do envio
+            if (string.IsNullOrWhiteSpace(txtNome.Text))
+            {
+                MessageBox.Show("Por favor, preencha o Nome.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtNome.Focus();
+                return;
+            }
+
+            // Regex de email corrigido como string verbatim para não gerar erros de escape
+            var emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            if (string.IsNullOrWhiteSpace(txtEmail.Text) || !Regex.IsMatch(txtEmail.Text, emailPattern))
+            {
+                MessageBox.Show("Por favor, insira um Email válido.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtEmail.Focus();
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtAssunto.Text))
+            {
+                MessageBox.Show("Por favor, preencha o Assunto.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtAssunto.Focus();
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtDescricao.Text))
+            {
+                MessageBox.Show("Por favor, preencha a Descrição.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtDescricao.Focus();
+                return;
+            }
+
+            // TODO: implementar lógica de envio do chamado
             MessageBox.Show("Chamado enviado com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            Close();
+
+            // Limpa os campos após envio
+            txtNome.Text = string.Empty;
+            txtEmail.Text = string.Empty;
+            txtAssunto.Text = string.Empty;
+            txtDescricao.Text = string.Empty;
+            cbUrgencia.SelectedIndex = 1;
+            arquivoSelecionado = string.Empty;
+            lblArquivoSelecionado.Text = "Nenhum arquivo selecionado";
         }
     }
 }
