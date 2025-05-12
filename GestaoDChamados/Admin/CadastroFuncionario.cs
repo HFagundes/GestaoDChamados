@@ -13,17 +13,21 @@ namespace GestaoDChamados.Admin
 
         public CadastroFuncionario()
         {
-
             InitializeComponent();
+
+            // Remove borda e barra de título internas
+            this.FormBorderStyle = FormBorderStyle.None;
+            this.ControlBox = false;
+            this.Text = string.Empty;
+
+            // Mantém maximizado para preencher todo o container/MDI
+            this.WindowState = FormWindowState.Maximized;
+
             CriarInterfaceUsuario();
         }
 
         private void CriarInterfaceUsuario()
         {
-            this.Text = "Cadastro de Funcionario";
-            this.WindowState = FormWindowState.Maximized;
-            this.FormBorderStyle = FormBorderStyle.Sizable;
-            this.MaximizeBox = true;
             this.BackColor = Color.DarkGray;
 
             container = new Panel
@@ -118,7 +122,7 @@ namespace GestaoDChamados.Admin
                         cmd.Parameters.AddWithValue("nome", nome);
                         cmd.Parameters.AddWithValue("usuario", usuario);
                         cmd.Parameters.AddWithValue("senha", senha);
-                        cmd.Parameters.AddWithValue("tipo", tipo); // <- usuário
+                        cmd.Parameters.AddWithValue("tipo", tipo);
                         cmd.Parameters.AddWithValue("cargo", cargo);
                         cmd.ExecuteNonQuery();
                     }
