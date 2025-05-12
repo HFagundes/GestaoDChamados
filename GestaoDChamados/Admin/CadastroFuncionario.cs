@@ -20,7 +20,7 @@ namespace GestaoDChamados.Admin
 
         private void CriarInterfaceUsuario()
         {
-            this.Text = "Cadastro de Usuário";
+            this.Text = "Cadastro de Funcionario";
             this.WindowState = FormWindowState.Maximized;
             this.FormBorderStyle = FormBorderStyle.Sizable;
             this.MaximizeBox = true;
@@ -124,7 +124,7 @@ namespace GestaoDChamados.Admin
                     }
                 }
 
-                MessageBox.Show("Usuário cadastrado com sucesso!");
+                MessageBox.Show("Funcionário cadastrado com sucesso!");
                 LimparCampos();
             }
             catch (Exception ex)
