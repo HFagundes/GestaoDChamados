@@ -212,7 +212,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                     model = "mistral",
                     stream = false,
                     messages = new[] {
-                        new { role = "system", content = "Você é um assistente de suporte técnico. Somente responde sobre Hardware e Software." },
+                        new { role = "system", content = "Você é um assistente de suporte técnico. Somente responde sobre Hardware e Software, qualquer tipo de outra pergunta que a pessoa fizer sobre vida pessoal , você responde que não foi programado para responder perguntas pessoais." },
                         new { role = "user", content = mensagem }
                     }
                 };

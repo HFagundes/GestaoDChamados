@@ -108,6 +108,20 @@ namespace ChamadosApp
                         form.Show();
                     };
                 }
+                else if (nome == "LISTA DE CADASTROS")
+                {
+                    button.Click += (s, e) =>
+                    {
+                        mainContent.Controls.Clear();
+                        var form = new ListarCadastro
+                        {
+                            TopLevel = false,
+                            Dock = DockStyle.Fill
+                        };
+                        mainContent.Controls.Add(form);
+                        form.Show();
+                    };
+                }
                 else if (nome == "CADASTRO DE USUÁRIO")
                 {
                     button.Click += (s, e) =>

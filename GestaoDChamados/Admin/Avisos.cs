@@ -20,6 +20,8 @@ namespace GestaoDChamados.Admin
 
         public Avisos()
         {
+            this.FormBorderStyle = FormBorderStyle.None;
+            this.ControlBox = false;
             // Inicializa os componentes manualmente
             InitializeComponents();
             CarregarAvisos();
