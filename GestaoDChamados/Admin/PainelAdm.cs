@@ -13,9 +13,11 @@ namespace ChamadosApp
     {
         private Panel sidebar, header, mainContent;
         private Label lblTitulo;
+        private int idUsuario;
 
-        public AdminForm()
+        public AdminForm(int id)
         {
+            this.idUsuario = idUsuario;
             InitializeComponent();
         }
 

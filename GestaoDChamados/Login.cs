@@ -157,26 +157,24 @@ namespace ChamadosApp
             string user = txtUsername.Text.Trim();
             string pass = txtPassword.Text;
 
-            string tipoUsuario = AutenticarUsuario(user, pass);
+            var (tipoUsuario, idUsuario) = AutenticarUsuario(user, pass);
 
             if (tipoUsuario == "admin")
             {
                 MessageBox.Show("Login efetuado com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                AdminForm adminForm = new AdminForm();
+                AdminForm adminForm = new AdminForm(idUsuario.Value);
                 adminForm.Show();
                 this.Hide();
             }
             else if (tipoUsuario == "funcionario")
             {
-                MessageBox.Show("Login funcionário feito com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                FuncionarioForm funcionarioForm = new FuncionarioForm();
+                FuncionarioForm funcionarioForm = new FuncionarioForm(idUsuario.Value);
                 funcionarioForm.Show();
                 this.Hide();
             }
             else if (tipoUsuario == "usuario")
             {
-                MessageBox.Show("Login usuário feito com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                UsuarioForm usuarioForm = new UsuarioForm();
+                UsuarioForm usuarioForm = new UsuarioForm(idUsuario.Value);
                 usuarioForm.Show();
                 this.Hide();
             }
@@ -187,8 +185,7 @@ namespace ChamadosApp
                 txtPassword.Focus();
             }
         }
-
-        private string AutenticarUsuario(string username, string password)
+        private (string tipo, int? id) AutenticarUsuario(string username, string password)
         {
             try
             {
@@ -196,23 +193,35 @@ namespace ChamadosApp
                 {
                     conn.Open();
 
-                    string query = "SELECT tipo FROM usuarios WHERE usuario = @usuario AND senha = @senha";
+                    string query = "SELECT id, tipo FROM usuarios WHERE usuario = @usuario AND senha = @senha";
                     using (var cmd = new NpgsqlCommand(query, conn))
                     {
                         cmd.Parameters.AddWithValue("usuario", username);
                         cmd.Parameters.AddWithValue("senha", password);
 
-                        var result = cmd.ExecuteScalar();
-                        return result?.ToString();
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                int id = reader.GetInt32(0);
+                                string tipo = reader.GetString(1);
+                                return (tipo, id);
+                            }
+                            else
+                            {
+                                return (null, null);
+                            }
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Erro ao conectar ao banco: " + ex.Message, "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return null;
+                return (null, null);
             }
         }
+
 
         private Image AplicarDegradeCircular(Image img)
         {

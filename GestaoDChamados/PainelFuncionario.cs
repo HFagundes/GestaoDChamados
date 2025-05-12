@@ -21,7 +21,7 @@ namespace ChamadosApp
         private const int GridsVerticalSpacing = 40;
         private const int HorizontalExtraOffset = 50;
 
-        public FuncionarioForm()
+        public FuncionarioForm(int id)
         {
             InitializeComponent();
         }

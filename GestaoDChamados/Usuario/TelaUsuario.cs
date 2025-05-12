@@ -14,7 +14,7 @@ namespace GestaoDChamados.Usuario
         private Label lblAbertos, lblAndamento, lblVencidos, lblResolvidos;
         private DataGridView dgvChamadosAbertos, dgvVencidos;
 
-        public UsuarioForm()
+        public UsuarioForm(int id)
         {
             InitializeComponent();
         }
