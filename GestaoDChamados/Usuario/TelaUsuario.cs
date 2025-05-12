@@ -6,6 +6,7 @@ using Npgsql;  // Para realizar a conexão com o banco de dados PostgreSQL
 using AtendeAI;
 using GestaoDChamados.Usuario.ChatBots.chatgpt;
 using Microsoft.VisualBasic.ApplicationServices;
+using ChamadosApp;
 
 namespace GestaoDChamados.Usuario
 {
@@ -46,7 +47,7 @@ namespace GestaoDChamados.Usuario
         private Panel CriarSidebar()
         {
             var panel = new Panel { Width = 200, BackColor = Color.Black, Dock = DockStyle.Left };
-            string[] botoes = { "MENU", "AJUDA.AI", "CRIAR CHAMADO", "MEUS CHAMADOS" };
+            string[] botoes = { "MENU", "AJUDA.AI", "CRIAR CHAMADO", "MEUS CHAMADOS", "SAIR" };
 
             for (int i = botoes.Length - 1; i >= 0; i--)
             {
@@ -85,6 +86,13 @@ namespace GestaoDChamados.Usuario
                         mainContent.Controls.Add(chatForm);
                         chatForm.Show();
                     };
+                else if (nome == "SAIR")
+                    btn.Click += (s, e) => {
+                        // Redireciona para a tela de login
+                        var loginForm = new LoginForm();
+                        loginForm.Show();
+                        this.Close(); // Fecha a tela atual
+                    };
 
                 panel.Controls.Add(btn);
             }
@@ -118,10 +126,6 @@ namespace GestaoDChamados.Usuario
             panel.Controls.Add(lblTitulo);
             return panel;
         }
-
-
-
-        // Substitua a função CriarMainContent() inteira pela versão corrigida abaixo:
 
         private void CriarMainContent()
         {
@@ -160,7 +164,6 @@ namespace GestaoDChamados.Usuario
             };
             painel.Controls.Add(lblBemVindo);
 
-            // Exibir avisos
             var avisos = ObterAvisos();
             int yAviso = 180;
 
@@ -215,7 +218,6 @@ namespace GestaoDChamados.Usuario
                 }
             }
 
-            // Início dos cards após os avisos
             string[] titulos = { "Abertos", "Em Andamento", "Resolvidos", "Vencidos" };
             Color[] cores = { Color.Blue, Color.Gold, Color.Green, Color.Red };
             var valores = ObterResumoChamados();
@@ -257,8 +259,6 @@ namespace GestaoDChamados.Usuario
 
             mainContent.Controls.Add(painel);
         }
-
-
 
         private List<(DateTime, string)> ObterAvisos()
         {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using GestaoDChamados.Funcionario; 
+using GestaoDChamados.Funcionario;
 using ChamadosApp; // para LoginForm
 
 namespace ChamadosApp
@@ -178,8 +178,8 @@ namespace ChamadosApp
             };
             panel.Controls.Add(logo);
 
-            // Botão de Sair/Logout
-            var btnLogout = new Button
+            // Botão SAIR fixo ao fundo
+            var btnSair = new Button
             {
                 Text = "SAIR",
                 Height = 45,
@@ -190,16 +190,21 @@ namespace ChamadosApp
                 Font = new Font("Segoe UI", 10, FontStyle.Regular),
                 TextAlign = ContentAlignment.MiddleCenter
             };
-            btnLogout.FlatAppearance.BorderSize = 0;
-            btnLogout.MouseEnter += (s, e) => { btnLogout.BackColor = Color.White; btnLogout.ForeColor = Color.Black; };
-            btnLogout.MouseLeave += (s, e) => { btnLogout.BackColor = Color.Black; btnLogout.ForeColor = Color.White; };
-            btnLogout.Click += (s, e) =>
+            btnSair.FlatAppearance.BorderSize = 0;
+            btnSair.MouseEnter += (s, e) => { btnSair.BackColor = Color.White; btnSair.ForeColor = Color.Black; };
+            btnSair.MouseLeave += (s, e) => { btnSair.BackColor = Color.Black; btnSair.ForeColor = Color.White; };
+            btnSair.Click += (s, e) =>
             {
-                var loginForm = new LoginForm();
-                loginForm.Show();
+                // Fecha o formulário atual
                 this.Close();
+
+                // Abre o formulário de login novamente
+                var loginForm = new LoginForm();  // Supondo que seja esse o nome do formulário de login
+                loginForm.Show();
             };
-            panel.Controls.Add(btnLogout);
+            panel.Controls.Add(btnSair);
+
+
 
             return panel;
         }

@@ -34,6 +34,7 @@ namespace ChamadosApp
 
         private void LoginForm_Load(object sender, EventArgs e)
         {
+            // Carrega usuário salvo, se existir
             if (File.Exists(rememberFile))
             {
                 txtUsername.Text = File.ReadAllText(rememberFile);
@@ -68,6 +69,13 @@ namespace ChamadosApp
             panelMain.Controls.Add(btnSubmit);
             panelMain.Dock = DockStyle.Left;
             panelMain.Size = new Size(400, 400);
+
+            // lblAppName (opcional, caso queira exibir nome do app)
+            lblAppName.AutoSize = true;
+            lblAppName.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
+            lblAppName.ForeColor = Color.White;
+            lblAppName.Location = new Point(120, 20);
+            lblAppName.Text = "ATENDE.AI";
 
             // lblWelcome
             lblWelcome.AutoSize = true;
@@ -144,26 +152,34 @@ namespace ChamadosApp
 
             var (tipoUsuario, idUsuario) = AutenticarUsuario(user, pass);
 
-            if (tipoUsuario == "admin")
+            if (tipoUsuario != null)
             {
-                usernameAutenticado = user; // Armazena o usuário autenticado
+                // Salva ou remove o usuário no arquivo “remember.txt”
+                if (chkRemember.Checked)
+                    File.WriteAllText(rememberFile, user);
+                else if (File.Exists(rememberFile))
+                    File.Delete(rememberFile);
+
+                usernameAutenticado = user;
                 MessageBox.Show("Login efetuado com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                AdminForm adminForm = new AdminForm(); // Passa o usuário para o AdminForm
-                adminForm.Show();
-                this.Hide();
-            }
-            else if (tipoUsuario == "funcionario")
-            {
-                usernameAutenticado = user; // Armazena o usuário autenticado
-                FuncionarioForm funcionarioForm = new FuncionarioForm();
-                funcionarioForm.Show();
-                this.Hide();
-            }
-            else if (tipoUsuario == "usuario")
-            {
-                usernameAutenticado = user; // Armazena o usuário autenticado
-                UsuarioForm usuarioForm = new UsuarioForm(usernameAutenticado); // Passa o usuário para o UsuarioForm
-                usuarioForm.Show();
+
+                // Redireciona conforme tipo
+                if (tipoUsuario == "admin")
+                {
+                    var adminForm = new AdminForm();
+                    adminForm.Show();
+                }
+                else if (tipoUsuario == "funcionario")
+                {
+                    var funcionarioForm = new FuncionarioForm();
+                    funcionarioForm.Show();
+                }
+                else // usuario
+                {
+                    var usuarioForm = new UsuarioForm(usernameAutenticado);
+                    usuarioForm.Show();
+                }
+
                 this.Hide();
             }
             else
@@ -181,13 +197,11 @@ namespace ChamadosApp
                 using (var conn = new NpgsqlConnection(connectionString))
                 {
                     conn.Open();
-
                     string query = "SELECT id, tipo FROM usuarios WHERE usuario = @usuario AND senha = @senha";
                     using (var cmd = new NpgsqlCommand(query, conn))
                     {
                         cmd.Parameters.AddWithValue("usuario", username);
                         cmd.Parameters.AddWithValue("senha", password);
-
                         using (var reader = cmd.ExecuteReader())
                         {
                             if (reader.Read())
@@ -196,10 +210,6 @@ namespace ChamadosApp
                                 string tipo = reader.GetString(1);
                                 return (tipo, id);
                             }
-                            else
-                            {
-                                return (null, null);
-                            }
                         }
                     }
                 }
@@ -207,8 +217,8 @@ namespace ChamadosApp
             catch (Exception ex)
             {
                 MessageBox.Show("Erro ao conectar ao banco: " + ex.Message, "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return (null, null);
             }
+            return (null, null);
         }
 
         private Image AplicarDegradeCircular(Image img)
@@ -216,7 +226,6 @@ namespace ChamadosApp
             Bitmap bitmap = new Bitmap(img);
             int width = bitmap.Width;
             int height = bitmap.Height;
-
             Bitmap gradiente = new Bitmap(width, height);
 
             using (var g = Graphics.FromImage(gradiente))
@@ -231,8 +240,7 @@ namespace ChamadosApp
                         double maxDist = Math.Sqrt((width / 2.0) * (width / 2.0) + (height / 2.0) * (height / 2.0));
                         int alpha = (int)(255 * (dist / maxDist));
                         alpha = Math.Max(0, Math.Min(255, alpha));
-                        Color gradColor = Color.FromArgb(alpha, Color.Black);
-                        gradiente.SetPixel(x, y, gradColor);
+                        gradiente.SetPixel(x, y, Color.FromArgb(alpha, Color.Black));
                     }
                 }
             }
