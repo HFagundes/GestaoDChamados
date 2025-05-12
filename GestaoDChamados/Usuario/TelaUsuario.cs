@@ -23,6 +23,7 @@ namespace GestaoDChamados.Usuario
         {
             Text = "atende.AI";
             Size = new Size(1920, 1080);
+            WindowState = FormWindowState.Maximized;
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.Sizable;
             MaximizeBox = true;
