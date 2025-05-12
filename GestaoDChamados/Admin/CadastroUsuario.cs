@@ -13,16 +13,19 @@ namespace GestaoDChamados.Admin
 
         public CadastroUsuario()
         {
+            this.FormBorderStyle = FormBorderStyle.None;
+            this.ControlBox = false;
+            this.Text = "Cadastro de Usuário";
+
+            // Mantém maximizado para preencher todo o container/MDI
+            this.WindowState = FormWindowState.Maximized;
             InitializeComponent();
             CriarInterfaceUsuario();
         }
 
         private void CriarInterfaceUsuario()
         {
-            this.Text = "Cadastro de Usuário";
-            this.WindowState = FormWindowState.Maximized;
-            this.FormBorderStyle = FormBorderStyle.Sizable;
-            this.MaximizeBox = true;
+
             this.BackColor = Color.DarkGray;
 
             container = new Panel

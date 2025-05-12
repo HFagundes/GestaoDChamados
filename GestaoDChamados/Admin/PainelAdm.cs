@@ -55,7 +55,7 @@ namespace ChamadosApp
                 Dock = DockStyle.Left,
             };
 
-            string[] botoes = { "MENU", "CADASTRO DE USUÁRIO", "CADASTRO DE FUNCIONÁRIO", "LISTA DE CADASTROS" };
+            string[] botoes = { "MENU", "CADASTRO DE USUÁRIO", "CADASTRO DE FUNCIONÁRIO", "LISTA DE CADASTROS" , "AVISOS" };
 
             // Adiciona os botões de baixo para cima
             for (int i = botoes.Length - 1; i >= 0; i--)
@@ -94,7 +94,7 @@ namespace ChamadosApp
                         CriarMainContent();
                     };
                 }
-                else if (nome == "CADASTRO DE FUNCIONÁRIO" || nome == "CADASTRO DE USUÁRIO")
+                else if (nome == "CADASTRO DE FUNCIONÁRIO")
                 {
                     button.Click += (s, e) =>
                     {
@@ -108,7 +108,35 @@ namespace ChamadosApp
                         form.Show();
                     };
                 }
-                // else if LISTA DE CADASTROS, etc.
+                else if (nome == "CADASTRO DE USUÁRIO")
+                {
+                    button.Click += (s, e) =>
+                    {
+                        mainContent.Controls.Clear();
+                        var form = new CadastroUsuario
+                        {
+                            TopLevel = false,
+                            Dock = DockStyle.Fill
+                        };
+                        mainContent.Controls.Add(form);
+                        form.Show();
+                    };
+                }
+                else if (nome == "AVISOS")
+                {
+                    button.Click += (s, e) =>
+                    {
+                        mainContent.Controls.Clear();
+                        var form = new Avisos
+                        {
+                            TopLevel = false,
+                            Dock = DockStyle.Fill
+                        };
+                        mainContent.Controls.Add(form);
+                        form.Show();
+                    };
+                }
+
 
                 panel.Controls.Add(button);
             }

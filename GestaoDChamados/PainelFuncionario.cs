@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using GestaoDChamados.Funcionario;  // forms ChamadosEmAberto, ChamadosEmAndamento, ChamadosEncerrados
+using GestaoDChamados.Funcionario; 
 using ChamadosApp; // para LoginForm
 
 namespace ChamadosApp

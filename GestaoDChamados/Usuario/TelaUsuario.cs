@@ -5,6 +5,7 @@ using System.Data;
 using Npgsql;  // Para realizar a conexão com o banco de dados PostgreSQL
 using AtendeAI;
 using GestaoDChamados.Usuario.ChatBots.chatgpt;
+using Microsoft.VisualBasic.ApplicationServices;
 
 namespace GestaoDChamados.Usuario
 {
@@ -33,12 +34,7 @@ namespace GestaoDChamados.Usuario
 
             sidebar = CriarSidebar();
             header = CriarHeader();
-
-            mainContent = new Panel
-            {
-                Dock = DockStyle.Fill,
-                BackColor = Color.DarkGray,
-            };
+            mainContent = new Panel { Dock = DockStyle.Fill, BackColor = Color.DarkGray };
 
             Controls.Add(mainContent);
             Controls.Add(header);
@@ -49,13 +45,7 @@ namespace GestaoDChamados.Usuario
 
         private Panel CriarSidebar()
         {
-            var panel = new Panel
-            {
-                Width = 200,
-                BackColor = Color.Black,
-                Dock = DockStyle.Left,
-            };
-
+            var panel = new Panel { Width = 200, BackColor = Color.Black, Dock = DockStyle.Left };
             string[] botoes = { "MENU", "AJUDA.AI", "CRIAR CHAMADO", "MEUS CHAMADOS" };
 
             for (int i = botoes.Length - 1; i >= 0; i--)
@@ -74,66 +64,33 @@ namespace GestaoDChamados.Usuario
                 };
                 btn.FlatAppearance.BorderSize = 0;
 
-                btn.MouseEnter += (s, e) =>
-                {
-                    btn.BackColor = Color.White;
-                    btn.ForeColor = Color.Black;
-                };
-                btn.MouseLeave += (s, e) =>
-                {
-                    btn.BackColor = Color.Black;
-                    btn.ForeColor = Color.White;
-                };
+                btn.MouseEnter += (s, e) => { btn.BackColor = Color.White; btn.ForeColor = Color.Black; };
+                btn.MouseLeave += (s, e) => { btn.BackColor = Color.Black; btn.ForeColor = Color.White; };
 
                 if (nome == "CRIAR CHAMADO")
-                {
                     btn.Click += (s, e) => NavigateToCriarChamado();
-                }
                 else if (nome == "AJUDA.AI")
-                {
-                    btn.Click += (s, e) =>
-                    {
+                    btn.Click += (s, e) => {
                         mainContent.Controls.Clear();
-                        var chatForm = new ChatForm(this)
-                        {
-                            TopLevel = false,
-                            Dock = DockStyle.Fill
-                        };
+                        var chatForm = new ChatForm(this) { TopLevel = false, Dock = DockStyle.Fill };
                         mainContent.Controls.Add(chatForm);
                         chatForm.Show();
                     };
-                }
                 else if (nome == "MENU")
-                {
-                    btn.Click += (s, e) =>
-                    {
-                        mainContent.Controls.Clear();
-                        CriarMainContent();
-                    };
-                }
+                    btn.Click += (s, e) => { mainContent.Controls.Clear(); CriarMainContent(); };
                 else if (nome == "MEUS CHAMADOS")
-                {
-                    btn.Click += (s, e) =>
-                    {
+                    btn.Click += (s, e) => {
                         mainContent.Controls.Clear();
-
-                        // Passando o usuarioAutenticado diretamente para o MeusChamados
-                        var chatForm = new MeusChamados(this.usuarioAutenticado)
-                        {
-                            TopLevel = false,
-                            Dock = DockStyle.Fill
-                        };
-
+                        var chatForm = new MeusChamados(this.usuarioAutenticado) { TopLevel = false, Dock = DockStyle.Fill };
                         mainContent.Controls.Add(chatForm);
                         chatForm.Show();
                     };
-                }
+
                 panel.Controls.Add(btn);
             }
 
             var spacer = new Panel { Height = 50, Dock = DockStyle.Top };
             panel.Controls.Add(spacer);
-
             var logo = new PictureBox
             {
                 Image = Image.FromFile("resources/atendeai.png"),
@@ -149,13 +106,7 @@ namespace GestaoDChamados.Usuario
 
         private Panel CriarHeader()
         {
-            var panel = new Panel
-            {
-                Height = 60,
-                BackColor = Color.DarkGray,
-                Dock = DockStyle.Top
-            };
-
+            var panel = new Panel { Height = 60, BackColor = Color.DarkGray, Dock = DockStyle.Top };
             lblTitulo = new Label
             {
                 Text = "Painel do Usuário",
@@ -164,23 +115,20 @@ namespace GestaoDChamados.Usuario
                 AutoSize = true,
                 Location = new Point(10, 15)
             };
-
             panel.Controls.Add(lblTitulo);
             return panel;
         }
+
+
+
+        // Substitua a função CriarMainContent() inteira pela versão corrigida abaixo:
 
         private void CriarMainContent()
         {
             mainContent.Controls.Clear();
 
-            var painel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                BackColor = Color.DarkGray,
-                Padding = new Padding(30)
-            };
+            var painel = new Panel { Dock = DockStyle.Fill, BackColor = Color.DarkGray, Padding = new Padding(30), AutoScroll = true };
 
-            // Logo e nome da empresa
             var logo = new PictureBox
             {
                 Image = Image.FromFile("resources/metacorp.png"),
@@ -200,10 +148,8 @@ namespace GestaoDChamados.Usuario
             };
             painel.Controls.Add(lblEmpresa);
 
-            // Pegar o nome e cargo do usuário do banco de dados
             var (nomeUsuario, cargoUsuario) = GetUsuarioInfo(usuarioAutenticado);
 
-            // Boas-vindas
             var lblBemVindo = new Label
             {
                 Text = $"Bem-vindo {nomeUsuario} ({cargoUsuario})",
@@ -214,21 +160,67 @@ namespace GestaoDChamados.Usuario
             };
             painel.Controls.Add(lblBemVindo);
 
-            // Avisos
-            var lblAviso = new Label
-            {
-                Text = "Avisos: Nenhum aviso no momento.",
-                Font = new Font("Segoe UI", 10, FontStyle.Italic),
-                ForeColor = Color.DimGray,
-                Location = new Point(20, 180),
-                AutoSize = true
-            };
-            painel.Controls.Add(lblAviso);
+            // Exibir avisos
+            var avisos = ObterAvisos();
+            int yAviso = 180;
 
-            // Cards de resumo
+            if (avisos.Count == 0)
+            {
+                var lblSemAvisos = new Label
+                {
+                    Text = "Nenhum aviso no momento.",
+                    Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                    ForeColor = Color.Black,
+                    Location = new Point(20, yAviso),
+                    AutoSize = true
+                };
+                painel.Controls.Add(lblSemAvisos);
+                yAviso += 40;
+            }
+            else
+            {
+                foreach (var (data, aviso) in avisos)
+                {
+                    var box = new Panel
+                    {
+                        BackColor = Color.White,
+                        BorderStyle = BorderStyle.FixedSingle,
+                        Location = new Point(20, yAviso),
+                        Size = new Size(600, 80)
+                    };
+
+                    var lblData = new Label
+                    {
+                        Text = data.ToString("dd/MM/yyyy"),
+                        Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                        ForeColor = Color.Black,
+                        Location = new Point(10, 10),
+                        AutoSize = true
+                    };
+
+                    var lblTexto = new Label
+                    {
+                        Text = aviso,
+                        Font = new Font("Segoe UI", 10),
+                        ForeColor = Color.Black,
+                        Location = new Point(10, 30),
+                        AutoSize = true,
+                        MaximumSize = new Size(580, 0)
+                    };
+
+                    box.Controls.Add(lblData);
+                    box.Controls.Add(lblTexto);
+                    painel.Controls.Add(box);
+                    yAviso += box.Height + 10;
+                }
+            }
+
+            // Início dos cards após os avisos
             string[] titulos = { "Abertos", "Em Andamento", "Resolvidos", "Vencidos" };
-            int[] valores = { 4, 2, 10, 1 };
             Color[] cores = { Color.Blue, Color.Gold, Color.Green, Color.Red };
+            var valores = ObterResumoChamados();
+
+            int yCards = yAviso + 20;
 
             for (int i = 0; i < titulos.Length; i++)
             {
@@ -236,7 +228,7 @@ namespace GestaoDChamados.Usuario
                 {
                     Size = new Size(160, 80),
                     BackColor = cores[i],
-                    Location = new Point(20 + (i * 170), 230),
+                    Location = new Point(20 + (i * 170), yCards),
                     BorderStyle = BorderStyle.FixedSingle
                 };
 
@@ -248,9 +240,10 @@ namespace GestaoDChamados.Usuario
                     Location = new Point(10, 10),
                     AutoSize = true
                 };
+
                 var lblValor = new Label
                 {
-                    Text = valores[i].ToString(),
+                    Text = valores.ContainsKey(titulos[i]) ? valores[titulos[i]].ToString() : "0",
                     Font = new Font("Segoe UI", 18, FontStyle.Bold),
                     ForeColor = Color.Black,
                     Location = new Point(10, 35),
@@ -265,12 +258,83 @@ namespace GestaoDChamados.Usuario
             mainContent.Controls.Add(painel);
         }
 
-        // Função para buscar o nome e cargo do usuário no banco
+
+
+        private List<(DateTime, string)> ObterAvisos()
+        {
+            var avisos = new List<(DateTime, string)>();
+            try
+            {
+                using (var conn = new NpgsqlConnection(connectionString))
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand("SELECT data, aviso FROM avisos WHERE data <= @hoje ORDER BY data DESC LIMIT 5", conn))
+                    {
+                        cmd.Parameters.AddWithValue("hoje", DateTime.Now);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                DateTime data = reader.GetDateTime(0);
+                                string aviso = reader.GetString(1);
+                                avisos.Add((data, aviso));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erro ao buscar avisos: " + ex.Message);
+            }
+            return avisos;
+        }
+
+        private Dictionary<string, int> ObterResumoChamados()
+        {
+            var resultado = new Dictionary<string, int>
+            {
+                { "Abertos", 0 },
+                { "Em Andamento", 0 },
+                { "Resolvidos", 0 },
+                { "Vencidos", 0 }
+            };
+
+            try
+            {
+                using (var conn = new NpgsqlConnection(connectionString))
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand("SELECT situacao, COUNT(*) FROM chamados WHERE usuario = @usuario GROUP BY situacao", conn))
+                    {
+                        cmd.Parameters.AddWithValue("usuario", usuarioAutenticado);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                string situacao = reader.GetString(0);
+                                int quantidade = reader.GetInt32(1);
+
+                                if (situacao == "Abertos") resultado["Abertos"] += quantidade;
+                                else if (situacao == "Em Andamento") resultado["Em Andamento"] += quantidade;
+                                else if (situacao == "Resolvidos") resultado["Resolvidos"] += quantidade;
+                                else if (situacao == "Vencidos") resultado["Vencidos"] += quantidade;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erro ao buscar resumo de chamados: " + ex.Message);
+            }
+
+            return resultado;
+        }
+
         private (string, string) GetUsuarioInfo(string usuarioAutenticado)
         {
-            string nome = string.Empty;
-            string cargo = string.Empty;
-
+            string nome = string.Empty, cargo = string.Empty;
             try
             {
                 using (var conn = new NpgsqlConnection(connectionString))
@@ -279,13 +343,12 @@ namespace GestaoDChamados.Usuario
                     using (var cmd = new NpgsqlCommand("SELECT nome, cargo FROM usuarios WHERE usuario = @usuario", conn))
                     {
                         cmd.Parameters.AddWithValue("usuario", usuarioAutenticado);
-
                         using (var reader = cmd.ExecuteReader())
                         {
                             if (reader.Read())
                             {
-                                nome = reader.GetString(0); // Nome do usuário
-                                cargo = reader.GetString(1); // Cargo do usuário
+                                nome = reader.GetString(0);
+                                cargo = reader.GetString(1);
                             }
                         }
                     }
@@ -295,7 +358,6 @@ namespace GestaoDChamados.Usuario
             {
                 MessageBox.Show($"Erro ao buscar usuário no banco: {ex.Message}");
             }
-
             return (nome, cargo);
         }
 
