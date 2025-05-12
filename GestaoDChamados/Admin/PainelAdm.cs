@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Data;
 using GestaoDChamados.Usuario.ChatBots.chatgpt;
 using AtendeAI;
+using GestaoDChamados.Admin;
+
 
 namespace ChamadosApp
 {
@@ -46,13 +48,12 @@ namespace ChamadosApp
         {
             var panel = new Panel
             {
-                Width = 200,
+                Width = 250,
                 BackColor = Color.Black,
                 Dock = DockStyle.Left,
             };
 
-            // Lista de botões (em ordem normal)
-            string[] botoes = { "MENU", "AJUDA.AI", "CRIAR CHAMADO", "MEUS CHAMADOS" };
+            string[] botoes = { "MENU", "CADASTRO DE USUÁRIO", "CADASTRO DE FUNCIONÁRIO", "LISTA DE CADASTROS" };
 
             // Adiciona os botões de baixo para cima
             for (int i = botoes.Length - 1; i >= 0; i--)
@@ -90,6 +91,48 @@ namespace ChamadosApp
                         CriarMainContent();
                     };
                 }
+                else if (nome == "CADASTRO DE FUNCIONÁRIO")
+                {
+                    button.Click += (s, e) =>
+                    {
+                        mainContent.Controls.Clear();
+                        var chatForm = new CadastroFuncionario
+                        {
+                            TopLevel = false,
+                            Dock = DockStyle.Fill
+                        };
+                        mainContent.Controls.Add(chatForm);
+                        chatForm.Show();
+                    };
+                }
+                else if (nome == "CADASTRO DE USUÁRIO")
+                {
+                    button.Click += (s, e) =>
+                    {
+                        mainContent.Controls.Clear();
+                        var chatForm = new CadastroFuncionario
+                        {
+                            TopLevel = false,
+                            Dock = DockStyle.Fill
+                        };
+                        mainContent.Controls.Add(chatForm);
+                        chatForm.Show();
+                    };
+                }
+                //else if (nome == "LISTA DE CADASTROS")
+                //{
+                //    button.Click += (s, e) =>
+                //    {
+                //        mainContent.Controls.Clear();
+                //        var chatForm = new ListarCadastro
+                //        {
+                //            TopLevel = false,
+                //            Dock = DockStyle.Fill
+                //        };
+                //        mainContent.Controls.Add(chatForm);
+                //        chatForm.Show();
+                //    };
+                //}
 
                 panel.Controls.Add(button); // Adiciona o botão à lista
             }
