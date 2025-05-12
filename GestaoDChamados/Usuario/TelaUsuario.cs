@@ -46,12 +46,23 @@ namespace GestaoDChamados.Usuario
 
         private Panel CriarSidebar()
         {
-            var panel = new Panel { Width = 200, BackColor = Color.Black, Dock = DockStyle.Left };
-            string[] botoes = { "MENU", "AJUDA.AI", "CRIAR CHAMADO", "MEUS CHAMADOS", "SAIR" };
-
-            for (int i = botoes.Length - 1; i >= 0; i--)
+            var panel = new Panel
             {
-                string nome = botoes[i];
+                Width = 240,
+                BackColor = Color.Black,
+                Dock = DockStyle.Left
+            };
+
+            string[] botoes = {
+        "MEUS CHAMADOS",
+        "CRIAR CHAMADO",
+        "AJUDA.AI",
+        "MENU"
+    };
+
+            // Adiciona os botões de cima para baixo
+            foreach (string nome in botoes)
+            {
                 var btn = new Button
                 {
                     Text = nome,
@@ -64,41 +75,46 @@ namespace GestaoDChamados.Usuario
                     TextAlign = ContentAlignment.MiddleCenter
                 };
                 btn.FlatAppearance.BorderSize = 0;
-
                 btn.MouseEnter += (s, e) => { btn.BackColor = Color.White; btn.ForeColor = Color.Black; };
                 btn.MouseLeave += (s, e) => { btn.BackColor = Color.Black; btn.ForeColor = Color.White; };
 
-                if (nome == "CRIAR CHAMADO")
-                    btn.Click += (s, e) => NavigateToCriarChamado();
+                // Ações
+                if (nome == "MENU")
+                {
+                    btn.Click += (s, e) => { mainContent.Controls.Clear(); CriarMainContent(); };
+                }
                 else if (nome == "AJUDA.AI")
-                    btn.Click += (s, e) => {
+                {
+                    btn.Click += (s, e) =>
+                    {
                         mainContent.Controls.Clear();
                         var chatForm = new ChatForm(this) { TopLevel = false, Dock = DockStyle.Fill };
                         mainContent.Controls.Add(chatForm);
                         chatForm.Show();
                     };
-                else if (nome == "MENU")
-                    btn.Click += (s, e) => { mainContent.Controls.Clear(); CriarMainContent(); };
+                }
+                else if (nome == "CRIAR CHAMADO")
+                {
+                    btn.Click += (s, e) => NavigateToCriarChamado();
+                }
                 else if (nome == "MEUS CHAMADOS")
-                    btn.Click += (s, e) => {
+                {
+                    btn.Click += (s, e) =>
+                    {
                         mainContent.Controls.Clear();
                         var chatForm = new MeusChamados(this.usuarioAutenticado) { TopLevel = false, Dock = DockStyle.Fill };
                         mainContent.Controls.Add(chatForm);
                         chatForm.Show();
                     };
-                else if (nome == "SAIR")
-                    btn.Click += (s, e) => {
-                        // Redireciona para a tela de login
-                        var loginForm = new LoginForm();
-                        loginForm.Show();
-                        this.Close(); // Fecha a tela atual
-                    };
+                }
 
                 panel.Controls.Add(btn);
             }
 
-            var spacer = new Panel { Height = 50, Dock = DockStyle.Top };
-            panel.Controls.Add(spacer);
+            // Espaço após a logo
+            panel.Controls.Add(new Panel { Height = 20, Dock = DockStyle.Top });
+
+            // Adiciona a logo por último (para aparecer no topo)
             var logo = new PictureBox
             {
                 Image = Image.FromFile("resources/atendeai.png"),
@@ -108,6 +124,29 @@ namespace GestaoDChamados.Usuario
                 BackColor = Color.Transparent
             };
             panel.Controls.Add(logo);
+
+            // Botão SAIR na parte inferior
+            var btnSair = new Button
+            {
+                Text = "SAIR",
+                Height = 45,
+                Dock = DockStyle.Bottom,
+                FlatStyle = FlatStyle.Flat,
+                ForeColor = Color.White,
+                BackColor = Color.Black,
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            btnSair.FlatAppearance.BorderSize = 0;
+            btnSair.MouseEnter += (s, e) => { btnSair.BackColor = Color.White; btnSair.ForeColor = Color.Black; };
+            btnSair.MouseLeave += (s, e) => { btnSair.BackColor = Color.Black; btnSair.ForeColor = Color.White; };
+            btnSair.Click += (s, e) =>
+            {
+                var loginForm = new LoginForm();
+                loginForm.Show();
+                this.Close();
+            };
+            panel.Controls.Add(btnSair);
 
             return panel;
         }
