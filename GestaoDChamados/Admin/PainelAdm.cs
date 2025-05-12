@@ -15,9 +15,8 @@ namespace ChamadosApp
         private Label lblTitulo;
         private int idUsuario;
 
-        public AdminForm(int id)
+        public AdminForm()
         {
-            this.idUsuario = idUsuario;
             InitializeComponent();
         }
 

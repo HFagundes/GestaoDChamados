@@ -162,19 +162,19 @@ namespace ChamadosApp
             if (tipoUsuario == "admin")
             {
                 MessageBox.Show("Login efetuado com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                AdminForm adminForm = new AdminForm(idUsuario.Value);
+                AdminForm adminForm = new AdminForm();
                 adminForm.Show();
                 this.Hide();
             }
             else if (tipoUsuario == "funcionario")
             {
-                FuncionarioForm funcionarioForm = new FuncionarioForm(idUsuario.Value);
+                FuncionarioForm funcionarioForm = new FuncionarioForm();
                 funcionarioForm.Show();
                 this.Hide();
             }
             else if (tipoUsuario == "usuario")
             {
-                UsuarioForm usuarioForm = new UsuarioForm(idUsuario.Value);
+                UsuarioForm usuarioForm = new UsuarioForm();
                 usuarioForm.Show();
                 this.Hide();
             }
