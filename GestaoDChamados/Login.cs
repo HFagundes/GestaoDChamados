@@ -74,7 +74,7 @@ namespace ChamadosApp
             lblAppName.AutoSize = true;
             lblAppName.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
             lblAppName.ForeColor = Color.White;
-            lblAppName.Location = new Point(120, 20);
+            lblAppName.Location = new Point(114, 20);
             lblAppName.Text = "ATENDE.AI";
 
             // lblWelcome
