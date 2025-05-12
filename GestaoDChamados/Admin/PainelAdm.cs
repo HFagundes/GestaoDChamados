@@ -51,7 +51,6 @@ namespace ChamadosApp
                 Dock = DockStyle.Left,
             };
 
-            // Lista de botões (em ordem normal)
             string[] botoes = { "MENU", "AJUDA.AI", "CRIAR CHAMADO", "MEUS CHAMADOS" };
 
             // Adiciona os botões de baixo para cima
