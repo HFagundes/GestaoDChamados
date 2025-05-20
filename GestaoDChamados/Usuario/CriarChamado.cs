@@ -6,6 +6,11 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Npgsql;
 
+
+#if DEBUG
+using Xunit;
+#endif
+
 namespace AtendeAI
 {
     public class CriarChamadoForm : Form
@@ -182,7 +187,8 @@ namespace AtendeAI
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtEmail.Text) || !Regex.IsMatch(txtEmail.Text, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"))
+            if (string.IsNullOrWhiteSpace(txtEmail.Text) ||
+                !Regex.IsMatch(txtEmail.Text, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"))
             {
                 MessageBox.Show("Por favor, insira um email válido.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -209,7 +215,8 @@ namespace AtendeAI
 
                 using var cmd = new NpgsqlCommand(
                     "INSERT INTO chamados (nome, email, urgencia, assunto, descricao, imagemdados, datacriacao, usuario, situacao) " +
-                    "VALUES (@nome, @email, @urgencia, @assunto, @descricao, @imagem, @datacriacao, @usuario, @situacao)", conn);
+                    "VALUES (@nome, @email, @urgencia, @assunto, @descricao, @imagem, @datacriacao, @usuario, @situacao)",
+                    conn);
 
                 cmd.Parameters.AddWithValue("@nome", txtNome.Text);
                 cmd.Parameters.AddWithValue("@email", txtEmail.Text);
@@ -227,19 +234,14 @@ namespace AtendeAI
                     cmd.Parameters.AddWithValue("@imagem", DBNull.Value);
                 }
 
-                // Adicionando o usuário autenticado
                 cmd.Parameters.AddWithValue("@usuario", usuarioAutenticado);
-
-                // Definir a data de criação como a data e hora atuais
                 cmd.Parameters.AddWithValue("@datacriacao", DateTime.Now);
-
-                // Adicionando a situação como "Aberto"
                 cmd.Parameters.AddWithValue("@situacao", "Abertos");
 
                 cmd.ExecuteNonQuery();
                 MessageBox.Show("Chamado enviado com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                // Limpar os campos
+                // Limpar campos
                 txtNome.Text = "";
                 txtEmail.Text = "";
                 cbUrgencia.SelectedIndex = 1;
@@ -255,3 +257,42 @@ namespace AtendeAI
         }
     }
 }
+
+#if DEBUG
+namespace AtendeAI.Tests
+{
+    public class CriarChamadoFormTests
+    {
+        // Teste 1: regex de email
+        [Fact]
+        public void EmailInvalido_DeveSerRejeitadoPelaRegex()
+        {
+            // Arrange
+            var emailInvalido = "usuario@@email.com";
+
+            // Act
+            bool emailValido = Regex.IsMatch(
+                emailInvalido,
+                @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+            );
+
+            // Assert
+            Assert.False(emailValido);
+        }
+
+        // Teste 2: campo Nome não pode ficar vazio
+        [Fact]
+        public void NomeVazio_DeveFalharValidacaoDePreenchimento()
+        {
+            // Arrange
+            string nome = "";
+
+            // Act
+            bool nomePreenchido = !string.IsNullOrWhiteSpace(nome);
+
+            // Assert
+            Assert.False(nomePreenchido);
+        }
+    }
+}
+#endif
