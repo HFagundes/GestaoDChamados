@@ -3,6 +3,8 @@ using System.Data;
 using System.Windows.Forms;
 using Npgsql; // Certifique-se de ter adicionado o pacote Npgsql ao seu projeto.
 
+
+//MÉTODO DE LER
 public class MeusChamados : Form
 {
     private string usuarioAutenticado;

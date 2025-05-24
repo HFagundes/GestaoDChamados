@@ -6,6 +6,9 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Npgsql;
 
+
+
+//MÉTODO DE CRIAR
 namespace AtendeAI
 {
     public class CriarChamadoForm : Form
