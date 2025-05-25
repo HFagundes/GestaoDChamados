@@ -144,7 +144,7 @@ namespace GestaoDChamados.Admin
         }
 
         // ================================
-        // MÉTODO 2: READ – Buscar usuários pelo nome
+        // MÉTODO 2: READ – Buscar usuários pelo nome - Gustavo
         // ================================
         public DataTable BuscarUsuarioPorNome(string nome)
         {
@@ -167,7 +167,7 @@ namespace GestaoDChamados.Admin
         }
 
         // ================================
-        // MÉTODO 3: UPDATE – Atualizar cargo do usuário
+        // MÉTODO 3: UPDATE – Atualizar cargo do usuário - Gustavo
         // ================================
         public void AtualizarCargoUsuario(string usuario, string novoCargo)
         {
