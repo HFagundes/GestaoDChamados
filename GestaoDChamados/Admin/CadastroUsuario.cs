@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
 using Npgsql;
@@ -25,7 +26,6 @@ namespace GestaoDChamados.Admin
 
         private void CriarInterfaceUsuario()
         {
-
             this.BackColor = Color.DarkGray;
 
             container = new Panel
@@ -141,6 +141,48 @@ namespace GestaoDChamados.Admin
             txtUsuario.Text = "";
             txtSenha.Text = "";
             txtCargo.Text = "";
+        }
+
+        // ================================
+        // MÉTODO 2: READ – Buscar usuários pelo nome
+        // ================================
+        public DataTable BuscarUsuarioPorNome(string nome)
+        {
+            string connStr = "Host=localhost;Port=5432;Database=GestaoChamados;Username=postgres;Password=123;";
+            using (var conn = new NpgsqlConnection(connStr))
+            {
+                conn.Open();
+                string sql = "SELECT * FROM usuarios WHERE nome ILIKE @nome";
+                using (var cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("nome", "%" + nome + "%");
+                    using (var da = new NpgsqlDataAdapter(cmd))
+                    {
+                        DataTable tabela = new DataTable();
+                        da.Fill(tabela);
+                        return tabela;
+                    }
+                }
+            }
+        }
+
+        // ================================
+        // MÉTODO 3: UPDATE – Atualizar cargo do usuário
+        // ================================
+        public void AtualizarCargoUsuario(string usuario, string novoCargo)
+        {
+            string connStr = "Host=localhost;Port=5432;Database=GestaoChamados;Username=postgres;Password=123;";
+            using (var conn = new NpgsqlConnection(connStr))
+            {
+                conn.Open();
+                string sql = "UPDATE usuarios SET cargo = @cargo WHERE usuario = @usuario";
+                using (var cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("cargo", novoCargo);
+                    cmd.Parameters.AddWithValue("usuario", usuario);
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
     }
 }
