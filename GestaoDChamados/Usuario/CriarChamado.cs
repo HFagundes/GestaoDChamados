@@ -30,6 +30,7 @@ namespace AtendeAI
             Size = new Size(600, 600);
 
             CriarComponentes();
+            //Update_2 erro da criação de chamados resolvido
         }
 
         private Panel CriarTextBoxArredondada(out TextBox txt, Point location, Size size)
