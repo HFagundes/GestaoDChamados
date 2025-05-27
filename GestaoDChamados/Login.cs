@@ -174,6 +174,7 @@ namespace ChamadosApp
                 MessageBox.Show("Login efetuado com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 new AdminForm().Show();
                 this.Hide();
+                //Não alterar os if/else
             }
             else if (tipoUsuario == "funcionario")
             {
