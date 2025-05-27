@@ -123,6 +123,7 @@ namespace AtendeAI
                 BackColor = Color.Red,
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat
+                // Almazan
             };
             btnLimparAnexo.FlatAppearance.BorderSize = 0;
             btnLimparAnexo.Click += BtnLimparAnexo_Click;
