@@ -12,22 +12,34 @@ public class ChamadoDetalheForm : Form
     private readonly int _chamadoId;
     private readonly string _usuarioAtual;
 
-    // UI
+    // Título + meta
     private Label lblTitulo;
-    private TextBox txtDescricao;
     private Label lblMeta;
+
+    // Bloco "Solicitante"
+    private GroupBox grpSolicitante;
+    private Label lblSolicNome;
+    private Label lblSolicEmail;
+    private Label lblSolicUsuario;
+    private Label lblSolicUrgencia;
+
+    // Descrição
+    private TextBox txtDescricao;
+
+    // Anexo
     private Panel pnlAnexo;
     private PictureBox picAnexo;
 
-    // Chat
-    private ListBox lstChat;
+    // Chat (agora com TextBox para log)
+    private TextBox txtChatLog;
     private TextBox txtMsg;
     private Button btnEnviar;
 
     private string _anexoPath = "";
 
-    // pasta fixa onde ficam os uploads (como você pediu)
-    private const string PastaUploadsFixa = @"H:\Gestao\GestaoDChamados\GestaoDChamados\bin\Debug\net8.0-windows\uploads";
+    // pasta fixa dos uploads
+    private const string PastaUploadsFixa =
+        @"H:\Gestao\GestaoDChamados\GestaoDChamados\bin\Debug\net8.0-windows\uploads";
 
     public ChamadoDetalheForm(string connectionString, int chamadoId, string usuarioAtual)
     {
@@ -48,18 +60,19 @@ public class ChamadoDetalheForm : Form
 
     private void BuildUI()
     {
-        // esquerda: detalhes + anexo
+        // Esquerda: detalhes + anexo
         var left = new Panel { Dock = DockStyle.Fill, Padding = new Padding(16) };
-        // direita: chat
-        var right = new Panel { Dock = DockStyle.Right, Width = 360, Padding = new Padding(12), BackColor = Color.White };
+        // Direita: chat
+        var right = new Panel { Dock = DockStyle.Right, Width = 380, Padding = new Padding(12), BackColor = Color.White };
 
         Controls.Add(left);
         Controls.Add(right);
 
+        // Título e meta (fontes maiores)
         lblTitulo = new Label
         {
             Text = "Assunto do Chamado",
-            Font = new Font("Segoe UI", 14, FontStyle.Bold),
+            Font = new Font("Segoe UI", 16, FontStyle.Bold),
             AutoSize = true,
             Left = 0,
             Top = 0
@@ -71,23 +84,78 @@ public class ChamadoDetalheForm : Form
             Text = "Urgência • Situação • Criado em",
             AutoSize = true,
             Left = 0,
-            Top = 36
+            Top = 34,
+            Font = new Font("Segoe UI", 10, FontStyle.Regular)
         };
         left.Controls.Add(lblMeta);
 
+        // ==== BLOCO SOLICITANTE ====
+        grpSolicitante = new GroupBox
+        {
+            Text = "Solicitante",
+            Font = new Font("Segoe UI", 10, FontStyle.Bold),
+            Left = 0,
+            Top = 64,
+            Width = 560,
+            Height = 120
+        };
+        left.Controls.Add(grpSolicitante);
+
+        lblSolicNome = new Label
+        {
+            Text = "Nome:",
+            AutoSize = true,
+            Left = 10,
+            Top = 24,
+            Font = new Font("Segoe UI", 9.5f)
+        };
+        grpSolicitante.Controls.Add(lblSolicNome);
+
+        lblSolicEmail = new Label
+        {
+            Text = "E-mail:",
+            AutoSize = true,
+            Left = 10,
+            Top = 44,
+            Font = new Font("Segoe UI", 9.5f)
+        };
+        grpSolicitante.Controls.Add(lblSolicEmail);
+
+        lblSolicUsuario = new Label
+        {
+            Text = "Usuário:",
+            AutoSize = true,
+            Left = 10,
+            Top = 64,
+            Font = new Font("Segoe UI", 9.5f)
+        };
+        grpSolicitante.Controls.Add(lblSolicUsuario);
+
+        lblSolicUrgencia = new Label
+        {
+            Text = "Urgência:",
+            AutoSize = true,
+            Left = 10,
+            Top = 84,
+            Font = new Font("Segoe UI", 9.5f)
+        };
+        grpSolicitante.Controls.Add(lblSolicUrgencia);
+
+        // ==== DESCRIÇÃO (maior, fonte maior) ====
         txtDescricao = new TextBox
         {
             Multiline = true,
             ReadOnly = true,
             ScrollBars = ScrollBars.Vertical,
             Left = 0,
-            Top = 68,
+            Top = grpSolicitante.Bottom + 10,
             Width = 560,
-            Height = 220
+            Height = 220,                     // área maior
+            Font = new Font("Segoe UI", 11f)  // fonte maior
         };
         left.Controls.Add(txtDescricao);
 
-        // descrição não selecionável
+        // Descrição não selecionável
         txtDescricao.Cursor = Cursors.Arrow;
         txtDescricao.ShortcutsEnabled = false;
         txtDescricao.TabStop = false;
@@ -96,14 +164,15 @@ public class ChamadoDetalheForm : Form
         txtDescricao.MouseMove += (s, e) => txtDescricao.SelectionLength = 0;
         txtDescricao.KeyDown += (s, e) => e.SuppressKeyPress = true;
 
-        // Anexo (apenas imagem logo abaixo)
+        // ==== ANEXO (área maior) ====
         var grpAnexo = new GroupBox
         {
             Text = "Anexo",
+            Font = new Font("Segoe UI", 10, FontStyle.Bold),
             Left = 0,
-            Top = 300,
+            Top = txtDescricao.Bottom + 10,
             Width = 560,
-            Height = 280
+            Height = 240           // altura maior pra foto ficar grandona
         };
         left.Controls.Add(grpAnexo);
 
@@ -122,43 +191,52 @@ public class ChamadoDetalheForm : Form
         };
         pnlAnexo.Controls.Add(picAnexo);
 
-        // Chat (direita)
+        // ==== CHAT (direita) ====
         var lblChat = new Label
         {
             Text = "Chat com Funcionário",
             AutoSize = true,
             Left = 6,
             Top = 6,
-            Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            Font = new Font("Segoe UI", 11, FontStyle.Bold)
         };
         right.Controls.Add(lblChat);
 
-        lstChat = new ListBox
+        // Log do chat em TextBox multilinha (com quebra de linha)
+        txtChatLog = new TextBox
         {
             Left = 6,
-            Top = 30,
+            Top = 32,
             Width = right.Width - 24,
-            Height = 480,
-            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            Height = 460,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
+            Multiline = true,
+            ReadOnly = true,
+            ScrollBars = ScrollBars.Vertical,
+            WordWrap = true,
+            Font = new Font("Segoe UI", 9.5f),
+            BorderStyle = BorderStyle.FixedSingle
         };
-        right.Controls.Add(lstChat);
+        right.Controls.Add(txtChatLog);
 
         txtMsg = new TextBox
         {
             Left = 6,
-            Top = 520,
+            Top = 500,
             Width = right.Width - 98,
-            Height = 28,
-            Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
+            Height = 30,
+            Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+            Font = new Font("Segoe UI", 9.5f)
         };
         btnEnviar = new Button
         {
             Text = "Enviar",
             Left = right.Width - 86,
-            Top = 520,
+            Top = 500,
             Width = 80,
-            Height = 28,
-            Anchor = AnchorStyles.Bottom | AnchorStyles.Right
+            Height = 30,
+            Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Bold)
         };
         btnEnviar.Click += (_, __) => EnviarMensagem();
 
@@ -172,7 +250,7 @@ public class ChamadoDetalheForm : Form
         conn.Open();
 
         const string sql = @"
-            SELECT id, nome, email, urgencia, assunto, descricao, datacriacao, situacao, anexo_caminho
+            SELECT id, nome, email, id_usuario, urgencia, assunto, descricao, datacriacao, situacao, anexo_caminho
             FROM chamados
             WHERE id = @id
             LIMIT 1;";
@@ -186,6 +264,9 @@ public class ChamadoDetalheForm : Form
             return;
         }
 
+        var nome = rd["nome"]?.ToString() ?? "";
+        var email = rd["email"]?.ToString() ?? "";
+        var usuario = rd["id_usuario"]?.ToString() ?? "";
         var urg = rd["urgencia"]?.ToString() ?? "";
         var assunto = rd["assunto"]?.ToString() ?? "";
         var descr = rd["descricao"]?.ToString() ?? "";
@@ -193,8 +274,17 @@ public class ChamadoDetalheForm : Form
         var dt = Convert.ToDateTime(rd["datacriacao"]);
         _anexoPath = rd["anexo_caminho"]?.ToString() ?? "";
 
+        // Título + meta
         lblTitulo.Text = assunto;
         lblMeta.Text = $"{urg} • {situacao} • {dt:dd/MM/yyyy HH:mm}";
+
+        // Solicitante
+        lblSolicNome.Text = $"Nome: {nome}";
+        lblSolicEmail.Text = $"E-mail: {email}";
+        lblSolicUsuario.Text = $"Usuário: {usuario}";
+        lblSolicUrgencia.Text = $"Urgência: {urg}";
+
+        // Descrição
         txtDescricao.Text = descr;
 
         CarregarAnexoImagem();
@@ -208,15 +298,11 @@ public class ChamadoDetalheForm : Form
         if (string.IsNullOrWhiteSpace(_anexoPath))
             return;
 
-        // pega só o nome do arquivo, independente se veio "/uploads/arquivo.png" ou "uploads/arquivo.png"
         var fileName = Path.GetFileName(_anexoPath);
         if (string.IsNullOrWhiteSpace(fileName))
             return;
 
         var caminhoCompleto = Path.Combine(PastaUploadsFixa, fileName);
-
-        // Debug opcional pra você ver o caminho:
-        // MessageBox.Show($"anexo_caminho: {_anexoPath}\nfileName: {fileName}\ncaminhoCompleto: {caminhoCompleto}\nExiste: {File.Exists(caminhoCompleto)}");
 
         if (File.Exists(caminhoCompleto))
         {
@@ -233,7 +319,7 @@ public class ChamadoDetalheForm : Form
 
     private void CarregarChat()
     {
-        lstChat.Items.Clear();
+        txtChatLog.Clear();
 
         using var conn = new NpgsqlConnection(_connStr);
         conn.Open();
@@ -252,11 +338,13 @@ public class ChamadoDetalheForm : Form
             var autor = Convert.ToString(r["remetente_id"]) ?? "";
             var msg = Convert.ToString(r["mensagem"]) ?? "";
             var ts = Convert.ToDateTime(r["criado_em"]);
-            lstChat.Items.Add($"[{ts:dd/MM HH:mm}] {autor}: {msg}");
+
+            txtChatLog.AppendText($"[{ts:dd/MM HH:mm}] {autor}: {msg}{Environment.NewLine}");
         }
 
-        if (lstChat.Items.Count > 0)
-            lstChat.TopIndex = lstChat.Items.Count - 1;
+        // rola automaticamente para o final
+        txtChatLog.SelectionStart = txtChatLog.TextLength;
+        txtChatLog.ScrollToCaret();
     }
 
     private void EnviarMensagem()

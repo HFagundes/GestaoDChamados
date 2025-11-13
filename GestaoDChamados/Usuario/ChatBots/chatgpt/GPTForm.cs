@@ -127,21 +127,21 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
 
             btnEnviar = new Button
             {
-                Text = "➤",
+                Text = "Enviar",
                 Dock = DockStyle.Right,
-                Width = 50,
+                Width = 80,
                 Height = 50,
-                BackColor = Color.FromArgb(37, 211, 102),
+                BackColor = Color.Black,
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
                 Cursor = Cursors.Hand
             };
             btnEnviar.FlatAppearance.BorderSize = 0;
 
-            // Efeito hover no botão de enviar
-            btnEnviar.MouseEnter += (s, e) => btnEnviar.BackColor = Color.FromArgb(30, 180, 90);
-            btnEnviar.MouseLeave += (s, e) => btnEnviar.BackColor = Color.FromArgb(37, 211, 102);
+            // Hover em tons de preto/cinza
+            btnEnviar.MouseEnter += (s, e) => btnEnviar.BackColor = Color.FromArgb(40, 40, 40);
+            btnEnviar.MouseLeave += (s, e) => btnEnviar.BackColor = Color.Black;
 
             // Evento de clique do botão de enviar
             btnEnviar.Click += async (sender, e) => await EnviarMensagem();
@@ -240,7 +240,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 Font = new Font("Segoe UI", 10),
                 Padding = new Padding(10),
                 Margin = new Padding(3),
-                BackColor = isUser ? Color.FromArgb(220, 248, 198) : Color.White,
+                BackColor = isUser ? Color.FromArgb(255, 255, 255) : Color.White,
                 BorderStyle = BorderStyle.FixedSingle
             };
             var timeLabel = new Label

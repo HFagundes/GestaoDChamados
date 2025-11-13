@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.Net.Mail;              // 👈 ADICIONA ISSO
 using System.Windows.Forms;
 using Npgsql;
 
@@ -26,7 +27,7 @@ namespace AtendeAI
             FormBorderStyle = FormBorderStyle.None;
             ControlBox = false;
             StartPosition = FormStartPosition.CenterScreen;
-            BackColor = Color.DarkGray;
+            BackColor = Color.White;
             Size = new Size(600, 600);
 
             CriarComponentes();
@@ -182,30 +183,55 @@ namespace AtendeAI
             lblArquivoSelecionado.Text = "Nenhum arquivo selecionado";
         }
 
+        // 🔍 Validação de e-mail
+        private bool EmailValido(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            try
+            {
+                var addr = new MailAddress(email);
+                // opcional: garantir que não tenha espaços extras
+                return addr.Address == email.Trim();
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         private void BtnEnviar_Click(object sender, EventArgs e)
         {
+            // 👉 Verificação de e-mail ANTES de enviar pro banco
+            if (!EmailValido(txtEmail.Text))
+            {
+                MessageBox.Show("Informe um e-mail válido.", "Atenção",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtEmail.Focus();
+                return;
+            }
+
             try
             {
                 using var conn = new NpgsqlConnection(_connectionString);
                 conn.Open();
 
-                // IMPORTANTE: aqui o parâmetro é @anexo_caminho e vamos salvar UMA STRING (caminho do arquivo)
                 using var cmd = new NpgsqlCommand(
                 @"INSERT INTO chamados 
-                    (nome,usuario, email, urgencia, assunto, descricao, anexo_caminho, datacriacao, id_usuario, situacao) 
+                    (nome, usuario, email, urgencia, assunto, descricao, anexo_caminho, datacriacao, id_usuario, situacao) 
                   VALUES 
-                    (@nome,@usuario, @email, @urgencia, @assunto, @descricao, @anexo_caminho, @datacriacao, @id_usuario, @situacao);",
+                    (@nome, @usuario, @email, @urgencia, @assunto, @descricao, @anexo_caminho, @datacriacao, @id_usuario, @situacao);",
                 conn);
 
-
                 cmd.Parameters.AddWithValue("@nome", txtNome.Text);
-                cmd.Parameters.AddWithValue("@id_usuario", usuarioAutenticado);
                 cmd.Parameters.AddWithValue("@usuario", usuarioAutenticado);
-                cmd.Parameters.AddWithValue("@email", txtEmail.Text);
+                cmd.Parameters.AddWithValue("@email", txtEmail.Text.Trim());
                 cmd.Parameters.AddWithValue("@urgencia", cbUrgencia.SelectedItem?.ToString() ?? "");
-                cmd.Parameters.AddWithValue("@situacao", "Aberto");
                 cmd.Parameters.AddWithValue("@assunto", txtAssunto.Text);
                 cmd.Parameters.AddWithValue("@descricao", txtDescricao.Text);
+                cmd.Parameters.AddWithValue("@id_usuario", usuarioAutenticado);
+                cmd.Parameters.AddWithValue("@situacao", "Aberto");
 
                 // ====== ANEXO: copia para /uploads e grava o caminho no banco ======
                 if (!string.IsNullOrEmpty(arquivoSelecionado) && File.Exists(arquivoSelecionado))
@@ -228,8 +254,6 @@ namespace AtendeAI
                 // ===================================================================
 
                 cmd.Parameters.AddWithValue("@datacriacao", DateTime.Now);
-                cmd.Parameters.AddWithValue("@id_usuario", usuarioAutenticado);
-                cmd.Parameters.AddWithValue("@situacao", "Aberto");
 
                 cmd.ExecuteNonQuery();
 
