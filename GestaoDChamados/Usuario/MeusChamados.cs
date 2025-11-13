@@ -1,199 +1,327 @@
 ﻿using System;
 using System.Data;
+using System.Drawing;
 using System.Windows.Forms;
-using Npgsql; // Certifique-se de ter adicionado o pacote Npgsql ao seu projeto.
+using Npgsql;
 
 public class MeusChamados : Form
 {
-    private string usuarioAutenticado;
-    private Label lblUsuario;
-    private DataGridView dgvChamados;
-    private Button btnAbertos;
-    private Button btnEmAndamento;
-    private Button btnResolvidos;
-    private Button btnVencidos;
+    private readonly string _usuarioAutenticado;
+    private readonly string _connectionString =
+        "Host=localhost;Port=5432;Database=GestaoChamados;Username=postgres;Password=123;";
 
-    // String de conexão com o banco de dados PostgreSQL
-    private string connectionString = "Host=localhost;Port=5432;Database=GestaoChamados;Username=postgres;Password=123;";
+    private DataGridView dgvChamados;
+    private FlowLayoutPanel pnlFiltros;
+    private Button btnAbertos, btnEmAndamento, btnEncerrados;
+
+    // painel central onde aparece a lista OU o detalhe
+    private Panel _contentPanel;
 
     public MeusChamados(string usuario)
     {
-        this.usuarioAutenticado = usuario;
-        this.Text = "Meus Chamados";
-        this.FormBorderStyle = FormBorderStyle.None;
-        this.Dock = DockStyle.Fill;
+        _usuarioAutenticado = usuario;
 
-        InicializarTabela();
-        InicializarBotoesFiltro();
-        CarregarChamados(); // Carregar todos os chamados inicialmente
+        Text = "Meus Chamados";
+        FormBorderStyle = FormBorderStyle.None;
+        BackColor = Color.White;
+        Dock = DockStyle.Fill;
+
+        BuildUI();
+        CarregarChamados(); // todos inicialmente
     }
 
-    private void InicializarTabela()
+    private void BuildUI()
     {
-        dgvChamados = new DataGridView
-        {
-            Dock = DockStyle.Fill,
-            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            ReadOnly = true,
-            AllowUserToAddRows = false,
-            RowHeadersVisible = false
-        };
-
-        dgvChamados.Columns.Add("Nome", "Nome");
-        dgvChamados.Columns.Add("Email", "Email");
-        dgvChamados.Columns.Add("Urgencia", "Urgência");
-        dgvChamados.Columns.Add("Assunto", "Assunto");
-        dgvChamados.Columns.Add("Descricao", "Descrição");
-        dgvChamados.Columns.Add("DataCriacao", "Data de Criação");
-        dgvChamados.Columns.Add("Situacao", "Situação");
-
-        DataGridViewButtonColumn verChamadoBtn = new DataGridViewButtonColumn
-        {
-            HeaderText = "Ações",
-            Text = "Ver chamado",
-            UseColumnTextForButtonValue = true,
-            Name = "Acoes"
-        };
-        dgvChamados.Columns.Add(verChamadoBtn);
-
-        Controls.Add(dgvChamados);
-    }
-
-    private void InicializarBotoesFiltro()
-    {
-        // Botão para filtrar chamados Abertos
-        btnAbertos = new Button
-        {
-            Text = "Abertos",
-            Height = 40,
-            Width = 120,
-            Margin = new Padding(5),
-            FlatStyle = FlatStyle.Flat,
-            BackColor = System.Drawing.Color.LightSkyBlue,
-            ForeColor = System.Drawing.Color.White,
-            FlatAppearance = { BorderSize = 0 }
-        };
-        btnAbertos.Click += (sender, e) => CarregarChamados("Abertos");
-
-        // Botão para filtrar chamados Em Andamento
-        btnEmAndamento = new Button
-        {
-            Text = "Em Andamento",
-            Height = 40,
-            Width = 120,
-            Margin = new Padding(5),
-            FlatStyle = FlatStyle.Flat,
-            BackColor = System.Drawing.Color.LightGreen,
-            ForeColor = System.Drawing.Color.White,
-            FlatAppearance = { BorderSize = 0 }
-        };
-        btnEmAndamento.Click += (sender, e) => CarregarChamados("Em Andamento");
-
-        // Botão para filtrar chamados Resolvidos
-        btnResolvidos = new Button
-        {
-            Text = "Resolvidos",
-            Height = 40,
-            Width = 120,
-            Margin = new Padding(5),
-            FlatStyle = FlatStyle.Flat,
-            BackColor = System.Drawing.Color.LightCoral,
-            ForeColor = System.Drawing.Color.White,
-            FlatAppearance = { BorderSize = 0 }
-        };
-        btnResolvidos.Click += (sender, e) => CarregarChamados("Resolvidos");
-
-        // Botão para filtrar chamados Vencidos
-        btnVencidos = new Button
-        {
-            Text = "Vencidos",
-            Height = 40,
-            Width = 120,
-            Margin = new Padding(5),
-            FlatStyle = FlatStyle.Flat,
-            BackColor = System.Drawing.Color.Orange,
-            ForeColor = System.Drawing.Color.White,
-            FlatAppearance = { BorderSize = 0 }
-        };
-        btnVencidos.Click += (sender, e) => CarregarChamados("Vencidos");
-
-        // Painel para os botões
-        FlowLayoutPanel pnlFiltros = new FlowLayoutPanel
-        {
-            Dock = DockStyle.Top,
-            Height = 60,
-            FlowDirection = FlowDirection.LeftToRight, // Alinha os botões horizontalmente
-            Padding = new Padding(10),
-            AutoSize = true,
-            WrapContents = false, // Para que os botões não se movam para a linha seguinte
-            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
-        };
-
-        // Centralizando os botões usando o AutoSize e o Dock
-        pnlFiltros.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        // painel de filtros (topo)
+        pnlFiltros = new FlowLayoutPanel();
         pnlFiltros.Dock = DockStyle.Top;
+        pnlFiltros.Height = 64;
+        pnlFiltros.FlowDirection = FlowDirection.LeftToRight;
+        pnlFiltros.Padding = new Padding(12);
+        pnlFiltros.AutoSize = false;
+        pnlFiltros.WrapContents = false;
+        pnlFiltros.BackColor = Color.White;
 
-        // Adicionando os botões ao painel
+        btnAbertos = MakeFilterButton("Abertos", (s, e) => CarregarChamados("Aberto"));
+        btnEmAndamento = MakeFilterButton("Em Andamento", (s, e) => CarregarChamados("Em Andamento"));
+        btnEncerrados = MakeFilterButton("Encerrados", (s, e) => CarregarChamados("Encerrado"));
+
         pnlFiltros.Controls.Add(btnAbertos);
         pnlFiltros.Controls.Add(btnEmAndamento);
-        pnlFiltros.Controls.Add(btnResolvidos);
-        pnlFiltros.Controls.Add(btnVencidos);
+        pnlFiltros.Controls.Add(btnEncerrados);
 
-        // Adicionando o painel de botões ao formulário
         Controls.Add(pnlFiltros);
+
+        // grid
+        dgvChamados = new DataGridView();
+        dgvChamados.Dock = DockStyle.Fill;
+        dgvChamados.AutoGenerateColumns = false;
+        dgvChamados.ReadOnly = true;
+        dgvChamados.AllowUserToAddRows = false;
+        dgvChamados.AllowUserToResizeRows = false;
+        dgvChamados.RowHeadersVisible = false;
+        dgvChamados.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        dgvChamados.BackgroundColor = Color.White;
+        dgvChamados.BorderStyle = BorderStyle.None;
+
+        dgvChamados.EnableHeadersVisualStyles = false;
+        dgvChamados.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(245, 245, 245);
+        dgvChamados.ColumnHeadersDefaultCellStyle.ForeColor = Color.Black;
+        dgvChamados.ColumnHeadersHeight = 38;
+        dgvChamados.DefaultCellStyle.SelectionBackColor = Color.FromArgb(230, 240, 255);
+        dgvChamados.DefaultCellStyle.SelectionForeColor = Color.Black;
+
+        // colunas
+        dgvChamados.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "Id",
+            DataPropertyName = "id",
+            Visible = false
+        });
+        dgvChamados.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "Nome",
+            HeaderText = "Nome",
+            DataPropertyName = "nome",
+            FillWeight = 120
+        });
+        dgvChamados.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "Email",
+            HeaderText = "Email",
+            DataPropertyName = "email",
+            FillWeight = 140
+        });
+        dgvChamados.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "Urgencia",
+            HeaderText = "Urgência",
+            DataPropertyName = "urgencia",
+            FillWeight = 80
+        });
+        dgvChamados.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "Assunto",
+            HeaderText = "Assunto",
+            DataPropertyName = "assunto",
+            FillWeight = 140
+        });
+        dgvChamados.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "Descricao",
+            HeaderText = "Descrição",
+            DataPropertyName = "descricao",
+            FillWeight = 220
+        });
+        dgvChamados.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "DataCriacao",
+            HeaderText = "Criado em",
+            DataPropertyName = "datacriacao",
+            FillWeight = 90,
+            DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yyyy HH:mm" }
+        });
+        dgvChamados.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "Situacao",
+            HeaderText = "Situação",
+            DataPropertyName = "situacao",
+            FillWeight = 90
+        });
+        dgvChamados.Columns.Add(new DataGridViewTextBoxColumn
+        {
+            Name = "AnexoPath",
+            DataPropertyName = "anexo_caminho",
+            Visible = false
+        });
+
+        var colVer = new DataGridViewButtonColumn
+        {
+            Name = "Ver",
+            HeaderText = " ",
+            Text = "Ver",
+            UseColumnTextForButtonValue = true,
+            Width = 64
+        };
+        var colExcluir = new DataGridViewButtonColumn
+        {
+            Name = "Excluir",
+            HeaderText = " ",
+            Text = "Excluir",
+            UseColumnTextForButtonValue = true,
+            Width = 74
+        };
+
+        dgvChamados.Columns.Add(colVer);
+        dgvChamados.Columns.Add(colExcluir);
+        dgvChamados.CellClick += DgvChamados_CellClick;
+
+        // painel central (lista ou detalhe)
+        _contentPanel = new Panel();
+        _contentPanel.Dock = DockStyle.Fill;
+        _contentPanel.Padding = new Padding(12);
+        _contentPanel.Controls.Add(dgvChamados);
+
+        Controls.Add(_contentPanel);
+        _contentPanel.BringToFront();
     }
 
+    private Button MakeFilterButton(string text, EventHandler onClick)
+    {
+        var btn = new Button();
+        btn.Text = text;
+        btn.Height = 36;
+        btn.Width = 140;
+        btn.Margin = new Padding(6);
+        btn.FlatStyle = FlatStyle.Flat;
+        btn.BackColor = Color.Black;
+        btn.ForeColor = Color.White;
+        btn.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
+        btn.FlatAppearance.BorderSize = 0;
+        btn.Click += onClick;
+        btn.MouseEnter += (s, e) => btn.BackColor = Color.FromArgb(40, 40, 40);
+        btn.MouseLeave += (s, e) => btn.BackColor = Color.Black;
+        return btn;
+    }
 
     private void CarregarChamados(string situacaoFiltro = null)
     {
-        using (var connection = new NpgsqlConnection(connectionString))
+        using (var conn = new NpgsqlConnection(_connectionString))
         {
             try
             {
-                connection.Open();
+                conn.Open();
 
-                // Consulta SQL com filtro baseado na situação
-                string query = "SELECT nome, email, urgencia, assunto, descricao, datacriacao, situacao FROM chamados WHERE usuario = @usuario";
+                string sql = @"
+                    SELECT id, nome, email, urgencia, assunto, descricao, datacriacao, situacao, anexo_caminho
+                    FROM chamados
+                    WHERE id_usuario = @usuario";
 
-                // Se houver um filtro de situação, atualiza a consulta
                 if (!string.IsNullOrEmpty(situacaoFiltro))
-                {
-                    query += " AND situacao = @situacao";
-                }
+                    sql += " AND situacao = @situacao";
 
-                using (var cmd = new NpgsqlCommand(query, connection))
-                {
-                    cmd.Parameters.AddWithValue("@usuario", usuarioAutenticado);
+                sql += " ORDER BY datacriacao DESC;";
 
-                    // Adiciona o parâmetro de filtro de situação, se necessário
+                using (var da = new NpgsqlDataAdapter(sql, conn))
+                {
+                    da.SelectCommand.Parameters.AddWithValue("@usuario", _usuarioAutenticado);
                     if (!string.IsNullOrEmpty(situacaoFiltro))
-                    {
-                        cmd.Parameters.AddWithValue("@situacao", situacaoFiltro);
-                    }
+                        da.SelectCommand.Parameters.AddWithValue("@situacao", situacaoFiltro);
 
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        dgvChamados.Rows.Clear();
+                    var dt = new DataTable();
+                    da.Fill(dt);
+                    dgvChamados.DataSource = dt;
 
-                        while (reader.Read())
+                    // destaque visual por situação
+                    foreach (DataGridViewRow row in dgvChamados.Rows)
+                    {
+                        string sit = Convert.ToString(row.Cells["Situacao"].Value) ?? "";
+                        if (sit.Equals("Aberto", StringComparison.OrdinalIgnoreCase) ||
+                            sit.Equals("Abertos", StringComparison.OrdinalIgnoreCase))
                         {
-                            string nome = reader.GetString(0);
-                            string email = reader.GetString(1);
-                            string urgencia = reader.GetString(2);
-                            string assunto = reader.GetString(3);
-                            string descricao = reader.GetString(4);
-                            string dataCriacao = reader.GetDateTime(5).ToString("dd-MM-yyyy");
-                            string situacao = reader.GetString(6);
-
-                            dgvChamados.Rows.Add(nome, email, urgencia, assunto, descricao, dataCriacao, situacao);
+                            row.DefaultCellStyle.BackColor = Color.FromArgb(250, 255, 250);
+                        }
+                        else if (sit.Equals("Em Andamento", StringComparison.OrdinalIgnoreCase))
+                        {
+                            row.DefaultCellStyle.BackColor = Color.FromArgb(245, 248, 255);
+                        }
+                        else if (sit.Equals("Encerrado", StringComparison.OrdinalIgnoreCase) ||
+                                 sit.Equals("Encerrados", StringComparison.OrdinalIgnoreCase))
+                        {
+                            row.DefaultCellStyle.BackColor = Color.FromArgb(252, 248, 248);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao carregar os chamados: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Erro ao carregar os chamados: " + ex.Message,
+                    "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }
+
+    private void DgvChamados_CellClick(object sender, DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex < 0) return;
+
+        var grid = dgvChamados;
+        var colName = grid.Columns[e.ColumnIndex].Name;
+
+        if (colName == "Ver")
+        {
+            int id = Convert.ToInt32(grid.Rows[e.RowIndex].Cells["Id"].Value);
+            MostrarDetalheChamado(id);
+        }
+        else if (colName == "Excluir")
+        {
+            int id = Convert.ToInt32(grid.Rows[e.RowIndex].Cells["Id"].Value);
+
+            if (MessageBox.Show("Excluir este chamado permanentemente?",
+                    "Confirmação", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            {
+                ExcluirChamado(id);
+                CarregarChamados();
+            }
+        }
+    }
+
+    private void ExcluirChamado(int id)
+    {
+        using (var conn = new NpgsqlConnection(_connectionString))
+        {
+            try
+            {
+                conn.Open();
+
+                // apaga chat
+                using (var cmdChat = new NpgsqlCommand(
+                           "DELETE FROM chat_mensagens WHERE chamado_id = @id;", conn))
+                {
+                    cmdChat.Parameters.AddWithValue("@id", id);
+                    cmdChat.ExecuteNonQuery();
+                }
+
+                // apaga chamado
+                using (var cmd = new NpgsqlCommand(
+                           "DELETE FROM chamados WHERE id = @id AND id_usuario = @usuario;", conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    cmd.Parameters.AddWithValue("@usuario", _usuarioAutenticado);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erro ao excluir chamado: " + ex.Message,
+                    "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+    }
+
+    private void MostrarDetalheChamado(int id)
+    {
+        // esconde os filtros quando estiver no detalhe
+        pnlFiltros.Visible = false;
+
+        _contentPanel.Controls.Clear();
+
+        var detalhe = new ChamadoDetalheForm(_connectionString, id, _usuarioAutenticado);
+        detalhe.TopLevel = false;
+        detalhe.FormBorderStyle = FormBorderStyle.None;
+        detalhe.Dock = DockStyle.Fill;
+
+        _contentPanel.Controls.Add(detalhe);
+        detalhe.Show();
+    }
+
+    // se depois você quiser voltar pra lista e mostrar os filtros de novo:
+    // private void MostrarLista()
+    // {
+    //     pnlFiltros.Visible = true;
+    //     _contentPanel.Controls.Clear();
+    //     _contentPanel.Controls.Add(dgvChamados);
+    //     dgvChamados.Dock = DockStyle.Fill;
+    //     CarregarChamados();
+    // }
 }

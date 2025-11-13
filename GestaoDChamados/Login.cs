@@ -79,7 +79,7 @@ namespace ChamadosApp
             // txtUsername
             txtUsername.Font = new Font("Segoe UI", 10F);
             txtUsername.Location = new Point(35, 120);
-            txtUsername.PlaceholderText = "Usuário";
+            txtUsername.PlaceholderText = "Usuario";
             txtUsername.Size = new Size(300, 25);
             txtUsername.Region = Region.FromHrgn(CreateRoundRectRgn(0, 0, txtUsername.Width, txtUsername.Height, 15, 15));
 
@@ -146,29 +146,29 @@ namespace ChamadosApp
 
             if (tipoUsuario == "admin")
             {
-                usernameAutenticado = user; // Armazena o usuário autenticado
+                usernameAutenticado = user; // Armazena o usuï¿½rio autenticado
                 MessageBox.Show("Login efetuado com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                AdminForm adminForm = new AdminForm(); // Passa o usuário para o AdminForm
+                AdminForm adminForm = new AdminForm(); // Passa o usuï¿½rio para o AdminForm
                 adminForm.Show();
                 this.Hide();
             }
             else if (tipoUsuario == "funcionario")
             {
-                usernameAutenticado = user; // Armazena o usuário autenticado
+                usernameAutenticado = user; // Armazena o usuï¿½rio autenticado
                 FuncionarioForm funcionarioForm = new FuncionarioForm();
                 funcionarioForm.Show();
                 this.Hide();
             }
             else if (tipoUsuario == "usuario")
             {
-                usernameAutenticado = user; // Armazena o usuário autenticado
-                UsuarioForm usuarioForm = new UsuarioForm(usernameAutenticado); // Passa o usuário para o UsuarioForm
+                usernameAutenticado = user; // Armazena o usuï¿½rio autenticado
+                UsuarioForm usuarioForm = new UsuarioForm(usernameAutenticado); // Passa o usuï¿½rio para o UsuarioForm
                 usuarioForm.Show();
                 this.Hide();
             }
             else
             {
-                MessageBox.Show("Usuário ou senha inválidos.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Usuï¿½rio ou senha invï¿½lidos.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 txtPassword.Clear();
                 txtPassword.Focus();
             }

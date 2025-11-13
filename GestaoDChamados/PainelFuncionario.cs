@@ -34,14 +34,14 @@ namespace ChamadosApp
             this.WindowState = FormWindowState.Maximized;
             this.FormBorderStyle = FormBorderStyle.Sizable;
             this.MaximizeBox = true;
-            this.BackColor = Color.DarkGray;
+            this.BackColor = Color.White;
 
             // header
             header = new Panel
             {
                 Dock = DockStyle.Top,
                 Height = 60,
-                BackColor = Color.DarkGray
+                BackColor = Color.White
             };
             this.Controls.Add(header);
 

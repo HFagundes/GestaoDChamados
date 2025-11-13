@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Npgsql;
 
@@ -10,16 +9,20 @@ namespace AtendeAI
 {
     public class CriarChamadoForm : Form
     {
-        private string usuarioAutenticado;
+        private readonly string usuarioAutenticado;
+
         private TextBox txtNome, txtEmail, txtAssunto, txtDescricao;
         private ComboBox cbUrgencia;
         private Button btnAnexo, btnLimparAnexo, btnEnviar;
         private Label lblArquivoSelecionado;
         private string arquivoSelecionado = string.Empty;
 
+        private readonly string _connectionString =
+            "Host=localhost;Port=5432;Database=GestaoChamados;Username=postgres;Password=123;";
+
         public CriarChamadoForm(string usuario)
         {
-            this.usuarioAutenticado = usuario;
+            usuarioAutenticado = usuario;
             FormBorderStyle = FormBorderStyle.None;
             ControlBox = false;
             StartPosition = FormStartPosition.CenterScreen;
@@ -88,10 +91,15 @@ namespace AtendeAI
                 Width = 200,
                 DropDownStyle = ComboBoxStyle.DropDownList
             };
-            cbUrgencia.Items.AddRange(new[] { "Simples", "Média", "Urgente" });
+            cbUrgencia.Items.AddRange(new[] { "Baixa", "Média", "Alta" });
             cbUrgencia.SelectedIndex = 1;
 
-            var lblAssunto = new Label { Text = "Assunto (máx 150 caracteres):", AutoSize = true, Location = new Point(20, 240) };
+            var lblAssunto = new Label
+            {
+                Text = "Assunto (máx 150 caracteres):",
+                AutoSize = true,
+                Location = new Point(20, 240)
+            };
             var pnlAssunto = CriarTextBoxArredondada(out txtAssunto, new Point(20, 270), new Size(520, 30));
             txtAssunto.MaxLength = 150;
 
@@ -127,7 +135,8 @@ namespace AtendeAI
             lblArquivoSelecionado = new Label
             {
                 Text = "Nenhum arquivo selecionado",
-                Location = new Point(btnLimparAnexo.Location.X + btnLimparAnexo.Width + 10, btnAnexo.Location.Y + 5),
+                Location = new Point(btnLimparAnexo.Location.X + btnLimparAnexo.Width + 10,
+                                     btnAnexo.Location.Y + 5),
                 Width = 360,
                 AutoEllipsis = true
             };
@@ -175,59 +184,71 @@ namespace AtendeAI
 
         private void BtnEnviar_Click(object sender, EventArgs e)
         {
-            string connString = "Host=localhost;Port=5432;Database=GestaoChamados;Username=postgres;Password=123;";
-
             try
             {
-                using var conn = new NpgsqlConnection(connString);
+                using var conn = new NpgsqlConnection(_connectionString);
                 conn.Open();
 
+                // IMPORTANTE: aqui o parâmetro é @anexo_caminho e vamos salvar UMA STRING (caminho do arquivo)
                 using var cmd = new NpgsqlCommand(
-                    "INSERT INTO chamados (nome, email, urgencia, assunto, descricao, imagemdados, datacriacao, usuario, situacao) " +
-                    "VALUES (@nome, @email, @urgencia, @assunto, @descricao, @imagem, @datacriacao, @usuario, @situacao)", conn);
+                @"INSERT INTO chamados 
+                    (nome,usuario, email, urgencia, assunto, descricao, anexo_caminho, datacriacao, id_usuario, situacao) 
+                  VALUES 
+                    (@nome,@usuario, @email, @urgencia, @assunto, @descricao, @anexo_caminho, @datacriacao, @id_usuario, @situacao);",
+                conn);
+
 
                 cmd.Parameters.AddWithValue("@nome", txtNome.Text);
+                cmd.Parameters.AddWithValue("@id_usuario", usuarioAutenticado);
+                cmd.Parameters.AddWithValue("@usuario", usuarioAutenticado);
                 cmd.Parameters.AddWithValue("@email", txtEmail.Text);
-                cmd.Parameters.AddWithValue("@urgencia", cbUrgencia.SelectedItem.ToString());
+                cmd.Parameters.AddWithValue("@urgencia", cbUrgencia.SelectedItem?.ToString() ?? "");
+                cmd.Parameters.AddWithValue("@situacao", "Aberto");
                 cmd.Parameters.AddWithValue("@assunto", txtAssunto.Text);
                 cmd.Parameters.AddWithValue("@descricao", txtDescricao.Text);
 
+                // ====== ANEXO: copia para /uploads e grava o caminho no banco ======
                 if (!string.IsNullOrEmpty(arquivoSelecionado) && File.Exists(arquivoSelecionado))
                 {
-                    byte[] imagemBytes = File.ReadAllBytes(arquivoSelecionado);
-                    cmd.Parameters.AddWithValue("@imagem", imagemBytes);
+                    var pastaUploadsFisica = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "uploads");
+                    Directory.CreateDirectory(pastaUploadsFisica); // cria se não existir
+
+                    var nomeArquivo = $"{DateTime.Now:yyyyMMddHHmmssfff}_{Guid.NewGuid():N}{Path.GetExtension(arquivoSelecionado)}";
+                    var caminhoFisicoDestino = Path.Combine(pastaUploadsFisica, nomeArquivo);
+
+                    File.Copy(arquivoSelecionado, caminhoFisicoDestino, overwrite: true);
+
+                    var caminhoBanco = $"/uploads/{nomeArquivo}";
+                    cmd.Parameters.AddWithValue("@anexo_caminho", caminhoBanco);
                 }
                 else
                 {
-                    cmd.Parameters.AddWithValue("@imagem", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@anexo_caminho", DBNull.Value);
                 }
+                // ===================================================================
 
-                // Adicionando o usuário autenticado
-                cmd.Parameters.AddWithValue("@usuario", usuarioAutenticado);
-
-                // Definir a data de criação como a data e hora atuais
                 cmd.Parameters.AddWithValue("@datacriacao", DateTime.Now);
-
-                // Adicionando a situação como "Aberto"
-                cmd.Parameters.AddWithValue("@situacao", "Abertos");
+                cmd.Parameters.AddWithValue("@id_usuario", usuarioAutenticado);
+                cmd.Parameters.AddWithValue("@situacao", "Aberto");
 
                 cmd.ExecuteNonQuery();
-                MessageBox.Show("Chamado enviado com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                // Limpar os campos
+                MessageBox.Show("Chamado enviado com sucesso!", "Sucesso",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+
                 txtNome.Text = "";
                 txtEmail.Text = "";
                 cbUrgencia.SelectedIndex = 1;
                 txtAssunto.Text = "";
                 txtDescricao.Text = "";
                 lblArquivoSelecionado.Text = "Nenhum arquivo selecionado";
-                arquivoSelecionado = "";
+                arquivoSelecionado = string.Empty;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erro ao enviar chamado: " + ex.Message, "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Erro ao enviar chamado: " + ex.Message,
+                    "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
     }
 }

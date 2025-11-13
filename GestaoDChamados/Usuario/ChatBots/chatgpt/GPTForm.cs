@@ -46,7 +46,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
             {
                 Height = 60,
                 Dock = DockStyle.Top,
-                BackColor = Color.FromArgb(37, 211, 102)
+                BackColor = Color.FromArgb(0, 0, 0)
             };
 
             var title = new Label
@@ -65,8 +65,8 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
 
             var avatar = new PictureBox
             {
-                Width = 40,
-                Height = 40,
+                Width = 0,
+                Height = 0,
                 Location = new Point(10, (header.Height - 40) / 2),
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
@@ -94,7 +94,7 @@ namespace GestaoDChamados.Usuario.ChatBots.chatgpt
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
                 AutoScroll = true,
-                BackColor = Color.DarkGray,
+                BackColor = Color.White,
                 Padding = new Padding(10),
                 Margin = new Padding(0, header.Height + 20, 0, 0)
             };
